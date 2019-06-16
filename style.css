@@ -1,0 +1,49 @@
+body {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 12px;
+    background-color: rgb(0, 0, 0);
+    color: antiquewhite;
+    margin: 1rem;
+}
+
+h2 {
+    font-size: 1.5rem;
+    font-weight: normal;
+}
+
+.error {
+    color: red;
+}
+
+.selections {
+    margin: 0.5rem;
+}
+
+.controls {
+    margin: 0.5rem;
+}
+
+.controls > button {
+    margin-right: 0.5rem;
+}
+
+.controls > select {
+    margin-right: 0.5rem;
+}
+
+#work-grid {
+    display: grid;
+    margin: none;
+    grid-column-gap: 0.5rem;
+    grid-template-columns: 45vw 45vw;
+    grid-template-rows: 75vh;
+}
+
+.grid-item {
+    display: flex;
+    border: solid 1px gray;
+}
+
+#outcomes {
+    padding: 0.25rem;
+}
