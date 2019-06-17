@@ -31,6 +31,17 @@ h2 {
     margin-right: 0.5rem;
 }
 
+.textLog {
+    padding: 0.25rem;
+    overflow: auto;
+    width: 100%;
+}
+
+#editor {
+    resize: vertical;
+    overflow: auto;
+}
+
 #work-grid {
     display: grid;
     margin: none;
@@ -42,8 +53,4 @@ h2 {
 .grid-item {
     display: flex;
     border: solid 1px gray;
-}
-
-#outcomes {
-    padding: 0.25rem;
 }

@@ -1,0 +1,63 @@
+body {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 12px;
+    background-color: rgb(0, 0, 0);
+    color: antiquewhite;
+    margin: 1rem;
+}
+
+h2 {
+    font-size: 1.5rem;
+    font-weight: normal;
+}
+
+.errMsg {
+    color: red;
+}
+
+.logMsg {
+    color: white;
+}
+
+.selections {
+    margin: 0.5rem;
+    font-size: 1.25rem;
+}
+
+.selections > select {
+    margin-right: 0.5rem;
+    min-width: 200px;
+}
+
+.controls {
+    width: 100%;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    text-align: right;
+}
+
+.controls > button {
+    margin-right: 0.5rem;
+}
+
+#editArea {
+    width: 65rem;
+    margin-left: 0.5rem;
+}
+
+#editor {
+    width: 100%;
+    height: 35rem;
+    overflow: auto;
+    border: solid 1px gray;
+}
+
+#textLog {
+    position: absolute;
+    top: 6.5rem;
+    left: 68rem;
+    width: 560px;
+    height: 35rem;
+    overflow: auto;
+    border: solid 1px gray;
+}

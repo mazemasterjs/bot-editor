@@ -12,7 +12,20 @@
     </head>
     <body>
         <h2>Bot Editor</h2>
-        <section class="selections">
+        <div class="controls">
+            <button id="btnStartBot" onclick="runScript();">Run Bot</button>
+            <button id="btnUpdateBotCode" onclick="updateBotCode();">Save Bot</button>
+            <button id="btnSaveBotCode" onclick="saveNewBotCode();">Version Bot</button>
+        </div>
+
+        <div id="work-grid">
+            <div id="editor" class="grid-item"></div>
+            <div id="outcomes" class="grid-item">
+                <div id="outcomeContent" class="textLog"></div>
+            </div>
+        </div>
+
+        <div class="selections">
             Maze
             <select id="selMaze"></select>
             Team
@@ -20,18 +33,7 @@
             Bot
             <select id="selBot"></select>
             <button id="startGame" onclick="startGame()">Start Game</button>
-        </section>
-
-        <section id="editArea">
-            <div id="editor"></div>
-            <div class="controls">
-                <button id="btnStartBot" onclick="runScript();">Run Bot</button>
-                <button id="btnUpdateBotCode" onclick="updateBotCode();">Save Bot</button>
-                <button id="btnSaveBotCode" onclick="saveNewBotCode();">Version Bot</button>
-            </div>
-        </section>
-
-        <div id="textLog"></div>
+        </div>
 
         <script>
             var require = {paths: {vs: '../node_modules/monaco-editor/min/vs'}};
@@ -70,8 +72,6 @@
             }
 
             loadControls();
-
-            logMessage('Ready to ROCK!');
         </script>
     </body>
 </html>
