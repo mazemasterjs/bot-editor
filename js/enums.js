@@ -45,7 +45,9 @@ const DIRS = {
     NORTH: 1,
     SOUTH: 2,
     EAST: 4,
-    WEST: 8
+    WEST: 8,
+    LEFT: 16,
+    RIGHT: 32
 };
 const CELL_TAGS = {
     NONE: 0,
@@ -64,14 +66,20 @@ const CELL_TRAPS = {
 };
 const COMMANDS = {
     NONE: 0,
-    LOOK: 1,
-    SIT: 2,
-    STAND: 3,
-    MOVE: 4,
-    JUMP: 5,
-    WRITE: 6,
-    QUIT: 7
+    FACE: 1,
+    LISTEN: 2,
+    LOOK: 3,
+    SIT: 4,
+    SNIFF: 5,
+    STAND: 6,
+    TURN: 7,
+    MOVE: 8,
+    JUMP: 9,
+    WAIT: 10,
+    WRITE: 11,
+    QUIT: 12
 };
+
 const GAME_RESULTS = {
     NONE: 0,
     IN_PROGRESS: 1,

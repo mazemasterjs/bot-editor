@@ -1,8 +1,6 @@
-const BASE_HOST = 'http://mazemasterjs.com';
-//const BASE_HOST = 'http://localhost:8080';
 const GAME_URL = 'http://localhost:8080/game';
-const MAZE_URL = BASE_HOST + '/api/maze';
-const TEAM_URL = BASE_HOST + '/api/team';
+const MAZE_URL = 'http://mazemasterjs.com/api/maze';
+const TEAM_URL = 'http://mazemasterjs.com/api/team';
 
 function startGame() {
     prepend('Starting game...');
