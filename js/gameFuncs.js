@@ -62,20 +62,20 @@ async function loadBots(teamId) {
     if (!teams || !teamId) return;
 
     return $.getJSON(TEAM_URL + '/get?id=' + teamId, (data) => {
-        team = data[0];
-        $('#selBot').empty();
-        for (const bot of team.bots) {
-            let botSel = "<option value='" + bot.id + "'>";
-            botSel += bot.name + ' (' + bot.coder + ')';
-            botSel += '</option>';
-            $('#selBot').append(botSel);
-        }
+            team = data[0];
+            $('#selBot').empty();
+            for (const bot of team.bots) {
+                let botSel = "<option value='" + bot.id + "'>";
+                botSel += bot.name + ' (' + bot.coder + ')';
+                botSel += '</option>';
+                $('#selBot').append(botSel);
+            }
 
-        let debugBotSel = "<option value='jd-test-bot'>";
-        debugBotSel += 'jd-test-bot (jd-test-bot)';
-        debugBotSel += '</option>';
-        $('#selBot').append(debugBotSel);
-    })
+            let debugBotSel = "<option value='jd-test-bot'>";
+            debugBotSel += 'jd-test-bot (jd-test-bot)';
+            debugBotSel += '</option>';
+            $('#selBot').append(debugBotSel);
+        })
         .done(() => {
             loadBotVersions($('#selBot :selected').val());
         })
@@ -90,10 +90,10 @@ function deleteBotCodeVersion(botId, version) {
         url: deleteUrl,
         dataType: 'json',
         method: 'DELETE',
-        success: function() {
+        success: function () {
             logMessage('wrn', `BOT CODE v${version} DELETED`);
         },
-        error: function(error) {
+        error: function (error) {
             logMessage('err', `ERROR DELETING BOT CODE v${version}`, error.message === undefined ? `${error.status} - ${error.statusText}` : error.message);
         }
     });
@@ -109,18 +109,18 @@ function loadBotVersions(botId, autoLoadBot = true) {
     console.log('Loading bot versions for botId=' + botId);
 
     return $.getJSON(url, (docs) => {
-        $('#selBotVersion').empty();
-        console.log(`${docs.length} versions found`);
-        let versionCount = 0;
-        for (const doc of docs.reverse()) {
-            versionCount++;
-            if (versionCount > 25) {
-                deleteBotCodeVersion(botId, doc.version);
-            } else {
-                $('#selBotVersion').append(`<option value="${doc.version}">${doc.version}</option>`);
+            $('#selBotVersion').empty();
+            console.log(`${docs.length} versions found`);
+            let versionCount = 0;
+            for (const doc of docs.reverse()) {
+                versionCount++;
+                if (versionCount > 25) {
+                    deleteBotCodeVersion(botId, doc.version);
+                } else {
+                    $('#selBotVersion').append(`<option value="${doc.version}">${doc.version}</option>`);
+                }
             }
-        }
-    })
+        })
         .done(() => {
             if (autoLoadBot) {
                 loadBotCode($('#selBot :selected').val());
@@ -217,11 +217,11 @@ function updateBotCode(botId, version, code) {
             version: version,
             code
         },
-        success: function() {
+        success: function () {
             logMessage('bot', `v<b>${version}</b> - Changes Saved`);
             setSaveButtonStates(false);
         },
-        error: function(error) {
+        error: function (error) {
             logMessage('err', 'ERROR UPDATING BOT CODE', error.status + ' - ' + error.statusText);
         }
     }).done(() => {
@@ -281,11 +281,11 @@ function versionBotCode(botId, code) {
                     version: newVersion,
                     code
                 },
-                success: function() {
+                success: function () {
                     logMessage('bot', `v<b>${newVersion}</b> - Version Created`);
                     setSaveButtonStates(false);
                 },
-                error: function(error) {
+                error: function (error) {
                     if (error.status !== 404) {
                         logMessage('err', 'ERROR SAVING BOT', error.status + ' - ' + error.statusText);
                     } else {
@@ -307,13 +307,13 @@ function versionBotCode(botId, code) {
                     version: '0.0.1',
                     code
                 },
-                success: function() {
+                success: function () {
                     logMessage('bot', `MouseBot&nbsp;<b>v0.0.1</b>&nbsp;Activated!`);
                     if ($('#selBotVersion').children().length === 0) {
                         $('#selBotVersion').append(`<option value="${botId}">0.0.1</option>`);
                     }
                 },
-                error: function(error) {
+                error: function (error) {
                     logMessage('err', 'ERROR INITIALIZING BOT', `${error.status} - ${error.statusText} initializing bot&nbsp;<b>${botId}</span>`);
                 }
             });
@@ -363,7 +363,7 @@ function startGame() {
         timeout: 1000,
         method: 'PUT', // method is any HTTP method
         data: {}, // data as js object
-        success: function(data) {
+        success: function (data) {
             $('#textLog').empty();
             $('#actionLog').empty();
             curGame = data.game;
@@ -381,7 +381,7 @@ function startGame() {
             // and display the most recent action (new game action)
             renderAction(lastAction);
         },
-        error: function(error) {
+        error: function (error) {
             if (error.responseJSON && error.responseJSON.message) {
                 if (error.responseJSON.message.indexOf('game already exists') >= 0) {
                     curGame.gameId = error.responseJSON.gameId;
@@ -437,12 +437,12 @@ async function processActionQueue() {
             method: 'PUT', // method is any HTTP method
             dataType: 'json',
             data: action,
-            success: function(data) {
+            success: function (data) {
                 lastAction = data;
                 renderAction(data);
                 return Promise.resolve(data);
             },
-            error: function(error) {
+            error: function (error) {
                 console.log('Error: ' + JSON.stringify(error));
                 logMessage('err', 'ACTION ERROR', error.responseJSON.message);
             }
@@ -456,11 +456,11 @@ async function executeAction(action) {
     const url = GAME_URL + '/action';
 
     let result = await $.ajax({
-        url: url,
-        method: 'PUT', // method is any HTTP method
-        dataType: 'json',
-        data: action
-    })
+            url: url,
+            method: 'PUT', // method is any HTTP method
+            dataType: 'json',
+            data: action
+        })
         .then((data) => {
             renderAction(data);
             return data;
@@ -485,11 +485,11 @@ function renderAction(result) {
     logMsg += `Player Facing: <b>${getObjValName(DIRS, result.playerFacing)}</b>&nbsp;&nbsp[&nbsp;${result.playerFacing}&nbsp;]<br>`;
 
     logMsg += '<hr>';
-    logMsg += `Sight: ${action.engram.sight}<br>`;
-    logMsg += `Sound: ${action.engram.sound}<br>`;
-    logMsg += `Smell: ${action.engram.smell}<br>`;
-    logMsg += `Touch: ${action.engram.touch}<br>`;
-    logMsg += `Taste: ${action.engram.taste}<br>`;
+    logMsg += `Sight: ${JSON.stringify(action.engram.north.see)}<br>${JSON.stringify(action.engram.south.see)}<br>${JSON.stringify(action.engram.east.see)}<br>${JSON.stringify(action.engram.west.see)}<br>`;
+    logMsg += `Sound: ${action.engram.north.hear}<br>${action.engram.south.hear}<br>${action.engram.east.hear}<br>${action.engram.west.hear}<br>`;
+    logMsg += `Smell: ${action.engram.north.smell}<br>${action.engram.south.smell}<br>${action.engram.east.smell}<br>${action.engram.west.smell}<br>`;
+    logMsg += `Touch: ${action.engram.north.feel}<br>${action.engram.south.feel}<br>${action.engram.east.feel}<br>${action.engram.west.feel}<br>`;
+    logMsg += `Taste: ${action.engram.north.taste}<br>${action.engram.south.taste}<br>${action.engram.east.taste}<br>${action.engram.west.taste}<br>`;
     logMsg += '</div>';
 
     if (action.outcomes.length > 0) {
