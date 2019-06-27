@@ -12,7 +12,7 @@ async function sendAction(action) {
     return Promise.reject(err);
   }
 
-  if (!action.command || action.command.trim() === '') {
+  if (!action.command) {
     let err = new Error('Missing action.command - Your action must include a command.');
     logMessage('err', 'Missing action.command', err.message);
     return Promise.reject(err);
@@ -52,7 +52,7 @@ async function startActionChain(action, callback) {
     throw actErr;
   }
 
-  if (!action.command || action.command.trim() === '') {
+  if (!action.command) {
     let cmdErr = new Error('Missing action.command - Your action must include a command.');
     logMessage('err', 'Missing action.command', cmdErr.message);
     throw cmdErr;
