@@ -80,7 +80,7 @@ async function startActionChain(action, callback) {
       // console.log('BotAction.startActionChain() -> gameFuncs.executeAction Response: ' + JSON.stringify(data));
       setTimeout(() => {
         if (EMERGENCY_STOP_BUTTON_PUSHED) {
-          $('#emergencyStopDialog').html(`<img src="images/${Math.floor(Math.random() * 12)}.gif" style="width:100%; min-height:100px" />`);
+          $('#emergencyStopDialog').html(`<img src="images/fail/${Math.floor(Math.random() * 32)}.gif" style="width:100%; min-height:100px" />`);
           $('#emergencyStopDialog').dialog('open');
           logMessage('err', 'EMERGENCY STOP');
           return;
