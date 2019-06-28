@@ -25,7 +25,7 @@ dec.push('  LEFT: 16,');
 dec.push('  RIGHT: 32');
 dec.push('};');
 
-dec.push('const PLAYER_STATES = {');
+dec.push('declare PLAYER_STATES = {');
 dec.push('  NONE: 0,');
 dec.push('  STANDING: 1,');
 dec.push('  SITTING: 2,');
@@ -39,7 +39,7 @@ dec.push('  SLOWED: 256,');
 dec.push('  DEAD: 512');
 dec.push('};');
 
-dec.push('const COMMANDS = {');
+dec.push('declare COMMANDS = {');
 dec.push('  NONE: 0,');
 dec.push('  FACE: 1,');
 dec.push('  LISTEN: 2,');

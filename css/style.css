@@ -72,8 +72,7 @@ h2 {
 
 .btnEnabled:hover {
   border: 1px solid #a17b10;
-  background-color: #96877333;
-  text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+  text-shadow: 1px 1px -1px -1px rgba(0, 0, 0, 0.5);
   background-image: linear-gradient(to bottom, #3b362e33, #a38762);
 }
 
@@ -86,6 +85,24 @@ h2 {
   display: inline-block;
   color: rgba(250, 235, 215, 0.5);
   background-color: hsla(34, 14%, 52%, 0.2);
+}
+
+#btnEmergencyStop {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.9rem;
+  font-weight: bold;
+  border: 1px dashed yellow;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  display: inline-block;
+  text-shadow: -1px -1px 1px 1px rgba(0, 0, 0, 0.5);
+  color: antiquewhite;
+  background-image: linear-gradient(to bottom, rgb(214, 0, 0), rgb(97, 18, 18));
+}
+
+#btnEmergencyStop:hover {
+  text-shadow: 1px 1px -1px -1px rgba(0, 0, 0, 0.5);
+  background-image: linear-gradient(to bottom, rgb(97, 18, 18), rgb(214, 0, 0));
 }
 
 .codeWarnings {
@@ -206,7 +223,7 @@ h2 {
 
 .logMsgHdr {
   color: #faebd7;
-  border-top: solid 1px #deb887;
+  border-top: solid 1px deb887;
   border-bottom: solid 1px #deb887;
   background-color: rgba(150, 135, 115, 0.2);
 }

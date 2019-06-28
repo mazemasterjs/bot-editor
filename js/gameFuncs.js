@@ -387,7 +387,9 @@ function startGame() {
       actionQueue = [];
 
       // load the minimap
-      scaleMiniMap(lastAction.outcomes[lastAction.outcomes.length - 1], curGame.playerFacing);
+      let mapText = lastAction.outcomes[lastAction.outcomes.length - 1];
+      faceAvatar(mapText, DIRS.SOUTH);
+      scaleMiniMap(mapText, curGame.playerFacing);
 
       // log game creation
       logMessage('log', 'Game Created', 'Game.Id :: ' + data.game.gameId);
@@ -507,22 +509,23 @@ function renderAction(result) {
   }
 
   // log the local "here" engram
-  logMsg += `<h5>HERE</h5>`;
-  logMsg += `<span class='engramData'><b>engram.see=</b>${JSON.stringify(action.engram.here.see)}</span>`;
-  logMsg += `<span class='engramData'><b>engram.hear=</b>${JSON.stringify(action.engram.here.hear)}</span>`;
-  logMsg += `<span class='engramData'><b>engram.smell=</b>${JSON.stringify(action.engram.here.smell)}</span>`;
-  logMsg += `<span class='engramData'><b>engram.feel=</b>${JSON.stringify(action.engram.here.feel)}</span>`;
-  logMsg += `<span class='engramData'><b>engram.taste=</b>${JSON.stringify(action.engram.here.taste)}</span>`;
+  logMsg += `<h5>ENGRAM.HERE</h5>`;
+  logMsg += `<span class='engramData'><b>.exitNorth=</b>${JSON.stringify(action.engram.here.exitNorth)}</span>`;
+  logMsg += `<span class='engramData'><b>.exitSouth=</b>${JSON.stringify(action.engram.here.exitSouth)}</span>`;
+  logMsg += `<span class='engramData'><b>.exitEast=</b>${JSON.stringify(action.engram.here.exitEast)}</span>`;
+  logMsg += `<span class='engramData'><b>.exitWest=</b>${JSON.stringify(action.engram.here.exitWest)}</span>`;
+  logMsg += `<span class='engramData'><b>.messages=</b>${JSON.stringify(action.engram.here.messages)}</span>`;
+  logMsg += `<span class='engramData'><b>.intuition=</b>${JSON.stringify(action.engram.here.intuition)}</span>`;
 
   // log directional engrams
   for (const dir in DIRS) {
     if (DIRS[dir] >= DIRS.NORTH && DIRS[dir] <= DIRS.WEST) {
-      logMsg += `<h5>${dir}</h5>`;
-      logMsg += `<span class='engramData'><b>engram.see=</b>${JSON.stringify(action.engram[dir.toLowerCase()].see)}</span>`;
-      logMsg += `<span class='engramData'><b>engram.hear=</b>${JSON.stringify(action.engram[dir.toLowerCase()].hear)}</span>`;
-      logMsg += `<span class='engramData'><b>engram.smell=</b>${JSON.stringify(action.engram[dir.toLowerCase()].smell)}</span>`;
-      logMsg += `<span class='engramData'><b>engram.feel=</b>${JSON.stringify(action.engram[dir.toLowerCase()].feel)}</span>`;
-      logMsg += `<span class='engramData'><b>engram.taste=</b>${JSON.stringify(action.engram[dir.toLowerCase()].taste)}</span>`;
+      logMsg += `<h5>ENGRAM.${dir}</h5>`;
+      logMsg += `<span class='engramData'><b>.see=</b>${JSON.stringify(action.engram[dir.toLowerCase()].see)}</span>`;
+      logMsg += `<span class='engramData'><b>.hear=</b>${JSON.stringify(action.engram[dir.toLowerCase()].hear)}</span>`;
+      logMsg += `<span class='engramData'><b>.smell=</b>${JSON.stringify(action.engram[dir.toLowerCase()].smell)}</span>`;
+      logMsg += `<span class='engramData'><b>.feel=</b>${JSON.stringify(action.engram[dir.toLowerCase()].feel)}</span>`;
+      logMsg += `<span class='engramData'><b>.taste=</b>${JSON.stringify(action.engram[dir.toLowerCase()].taste)}</span>`;
     }
   }
 
@@ -779,9 +782,11 @@ function setSaveButtonStates(enabled) {
     $('#btnSaveBotCode').attr('disabled', false);
     $('#btnSaveBotCode').removeClass('btnDisabled');
     $('#btnSaveBotCode').addClass('btnEnabled');
+    $('#btnSaveBotCode').attr('title', 'Save Bot (shortcut: [CTRL + S] in editor');
   } else {
     $('#btnSaveBotCode').attr('disabled', true);
     $('#btnSaveBotCode').addClass('btnDisabled');
     $('#btnSaveBotCode').removeClass('btnEnabled');
+    $('#btnSaveBotCode').attr('title', '');
   }
 }

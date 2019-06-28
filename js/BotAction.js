@@ -1,3 +1,6 @@
+const CALLBACK_DELAY = 50;
+let EMERGENCY_STOP_BUTTON_PUSHED = false;
+
 /**
  * Sends a command to the MazeMasterJS Game Server
  *
@@ -41,7 +44,7 @@ async function sendAction(action) {
  * Sends a command to the MazeMasterJS Game Server
  *
  * @param {action} action Actions include a command, a direction, and an optional message.
- * @param {action} callback The functoin to call back to with response data.
+ * @param {action} callback The function to call back to with response data.
  */
 async function startActionChain(action, callback) {
   console.log(`Sending action to game #${curGame.gameId}. Action: ${JSON.stringify(action)}`);
@@ -58,11 +61,11 @@ async function startActionChain(action, callback) {
     throw cmdErr;
   }
 
-  if (!callback) {
-    let cbErr = new Error('Missing callback - startActionChain() requires a callback function.');
-    logMessage('err', 'Missing callback', cbErr.message);
-    throw cbErr;
-  }
+  // if (!callback) {
+  //   let cbErr = new Error('Missing callback - startActionChain() requires a callback function.');
+  //   logMessage('err', 'Missing callback', cbErr.message);
+  //   throw cbErr;
+  // }
 
   if (!curGame || !curGame.gameId || curGame.gameId.trim() === '') {
     let gameIdErr = new Error('Invalid Game - No game is currently in progress.');
@@ -74,8 +77,17 @@ async function startActionChain(action, callback) {
 
   return await executeAction(action)
     .then(data => {
-      console.log('BotAction.startActionChain() -> gameFuncs.executeAction Response: ' + JSON.stringify(data));
-      callback(data);
+      // console.log('BotAction.startActionChain() -> gameFuncs.executeAction Response: ' + JSON.stringify(data));
+      setTimeout(() => {
+        if (EMERGENCY_STOP_BUTTON_PUSHED) {
+          $('#emergencyStopDialog').html(`<img src="images/${Math.floor(Math.random() * 12)}.gif" style="width:100%; min-height:100px" />`);
+          $('#emergencyStopDialog').dialog('open');
+          logMessage('err', 'EMERGENCY STOP');
+          return;
+        } else {
+          callback(data);
+        }
+      }, CALLBACK_DELAY);
     })
     .catch(gameNotFoundErr => {
       if (gameNotFoundErr.status === 404) {
@@ -83,7 +95,13 @@ async function startActionChain(action, callback) {
         throw gameNotFoundErr;
       } else {
         console.log('BotAtion.startActionChain() -> gameFuncs.executeAction Error: ' + JSON.stringify(gameNotFoundErr));
-        callback(gameNotFoundErr);
+        setTimeout(() => {
+          if (EMERGENCY_STOP_BUTTON_PUSHED) {
+            return;
+          } else {
+            callback(gameNotFoundErr);
+          }
+        }, CALLBACK_DELAY);
       }
     });
 }

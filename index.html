@@ -40,7 +40,7 @@
       <div class="controls">
         <label for="selBotVersion">Bot Version:</label>
         <select id="selBotVersion" class="autoScroll"></select>
-        <button id="btnSaveBotCode" class="btnDisabled" title="Save Bot (shortcut: [CTRL + S] in editor)" class="btnBot">
+        <button id="btnSaveBotCode" class="btnDisabled" class="btnBot">
           Version Bot
         </button>
         <button id="btnStartBot" class="btnBot btnEnabled" title="Run Bot (shortcut: F5 in editor)">Run Bot</button>
@@ -52,6 +52,9 @@
             onmouseover="$('#debugDialog').dialog('open');"
             onmouseout="$('#debugDialog').dialog('close');"
           ></span>
+        </button>
+        <button id="btnEmergencyStop" class="btnEmergencyStop" title="">
+          STOP
         </button>
       </div>
 
@@ -93,6 +96,8 @@
       <h3>TIP 3</h3>
       <p>If there are no <b>debugger;</b> lines in your code, execution will pause on line 1.</p>
     </div>
+
+    <div id="emergencyStopDialog" title="EMERGENCY STOP"></div>
 
     <!-- Load the Monaco Editor -->
     <script>
@@ -140,11 +145,17 @@
         });
 
         $('#btnStartBot').click(() => {
+          EMERGENCY_STOP_BUTTON_PUSHED = false;
           startBot(false);
         });
 
         $('#btnDebugBot').click(() => {
+          EMERGENCY_STOP_BUTTON_PUSHED = false;
           startBot(true);
+        });
+
+        $('#btnEmergencyStop').click(() => {
+          EMERGENCY_STOP_BUTTON_PUSHED = true;
         });
 
         $('#selTeam').change(() => {
@@ -168,6 +179,24 @@
           autoOpen: false,
           modal: false,
           closeText: '',
+        });
+
+        // set up the emergency stop dialog
+        $('#emergencyStopDialog').dialog({
+          // position: { my: 'center', at: 'center', of: editor },
+          autoOpen: false,
+          modal: true,
+          closeOnEscape: true,
+          closeText: '',
+          buttons: [
+            {
+              text: 'lol @ u',
+              icon: 'ui-icon-heart',
+              click: function() {
+                $(this).dialog('close');
+              },
+            },
+          ],
         });
 
         // enable tool tips
