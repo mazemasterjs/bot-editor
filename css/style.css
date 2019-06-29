@@ -48,7 +48,8 @@ h2 {
 }
 
 pre {
-  font-family: 'Share Tech Mono', monospace;
+  font-family: 'Space Mono', monospace;
+  /* font-family: 'Nanum Gothic Coding', monospace; */
 }
 
 .ui-dialog {

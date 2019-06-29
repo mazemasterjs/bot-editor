@@ -1,4 +1,7 @@
+/* eslint-disable no-unused-vars */
 const CALLBACK_DELAY = 50;
+
+// eslint-disable-next-line prefer-const
 let EMERGENCY_STOP_BUTTON_PUSHED = false;
 
 /**
@@ -7,7 +10,7 @@ let EMERGENCY_STOP_BUTTON_PUSHED = false;
  * @param {action} action Actions include a command, a direction, and an optional message.
  */
 async function sendAction(action) {
-  console.log(`Sending action to game #${curGame.gameId}. Action: ${JSON.stringify(action)}`);
+  console.log('sendAction', curGame.gameId, action);
 
   if (!action) {
     const err = new Error('Missing Action - You must supply an action object.');
@@ -16,13 +19,13 @@ async function sendAction(action) {
   }
 
   if (!action.command) {
-    let err = new Error('Missing action.command - Your action must include a command.');
+    const err = new Error('Missing action.command - Your action must include a command.');
     logMessage('err', 'Missing action.command', err.message);
     return Promise.reject(err);
   }
 
   if (!curGame.gameId || curGame.gameId.trim() === '') {
-    let err = new Error('Invalid Game - sendAction() requires an a valid gameId.');
+    const err = new Error('Invalid Game - sendAction() requires an a valid gameId.');
     logMessage('err', 'Invalid Game', err.message);
     return Promise.reject(err);
   } else {
@@ -47,7 +50,7 @@ async function sendAction(action) {
  * @param {action} callback The function to call back to with response data.
  */
 async function startActionChain(action, callback) {
-  console.log(`Sending action to game #${curGame.gameId}. Action: ${JSON.stringify(action)}`);
+  console.log('startActionChain', curGame.gameId, action);
 
   if (!action) {
     const actErr = new Error('Missing Action - You must supply an action object.');
@@ -56,7 +59,7 @@ async function startActionChain(action, callback) {
   }
 
   if (!action.command) {
-    let cmdErr = new Error('Missing action.command - Your action must include a command.');
+    const cmdErr = new Error('Missing action.command - Your action must include a command.');
     logMessage('err', 'Missing action.command', cmdErr.message);
     throw cmdErr;
   }
@@ -68,7 +71,7 @@ async function startActionChain(action, callback) {
   // }
 
   if (!curGame || !curGame.gameId || curGame.gameId.trim() === '') {
-    let gameIdErr = new Error('Invalid Game - No game is currently in progress.');
+    const gameIdErr = new Error('Invalid Game - No game is currently in progress.');
     logMessage('err', 'Invalid Game', gameIdErr.message);
     throw gameIdErr;
   } else {

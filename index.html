@@ -9,8 +9,9 @@
 
     <!-- Fonts  / Icons-->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Nanum+Gothic+Coding&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Space+Mono&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css?family=Quicksand&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css?family=Dosis|Share+Tech+Mono&display=swap" rel="stylesheet" />
 
     <!-- Monaco -->
     <link rel="stylesheet" data-name="vs/editor/editor.main" href="js/monaco-editor-min/min/vs/editor/editor.main.css" />
@@ -77,9 +78,6 @@
 
         <label for="selBot">Bot:</label>
         <select name="selBot" id="selBot"></select>
-
-        <!-- the start game button ... probably will go away -->
-        <button id="startGame" class="btnEnabled" title="Start a new MazeMasterJS game" onclick="startGame()">Start Game</button>
       </div>
     </section>
 
@@ -115,7 +113,7 @@
 
       // prettier-ignore
       monaco.languages.typescript.javascriptDefaults.addExtraLib(
-      BOT_ACTION_DECLARATION,
+        MMJS_EDITOR_LIB,
     );
 
       let model = monaco.editor.createModel(startingScript, 'javascript');
