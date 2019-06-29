@@ -57,6 +57,10 @@ h2 {
   color: antiquewhite;
 }
 
+.ui-tooltip-content {
+  text-align: center;
+}
+
 .btnEnabled {
   font-family: 'Quicksand', sans-serif;
   font-size: 0.9rem;
@@ -127,6 +131,10 @@ h2 {
   height: var(--miniMapSize);
   width: var(--miniMapSize);
   opacity: 0.5;
+}
+
+#miniMap:hover {
+  cursor: grab;
 }
 
 #miniMap h3 {
@@ -253,6 +261,12 @@ h2 {
 
 .actionBody > .engramData {
   display: inline-block;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  white-space: -pre-wrap;
+  white-space: -o-pre-wrap;
+  word-wrap: break-word;
 }
 
 .actionBody > .engramData > b {

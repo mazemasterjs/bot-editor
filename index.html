@@ -30,6 +30,7 @@
     <script src="js/gameFuncs.js"></script>
     <script src="js/declarations.js"></script>
     <script src="js/BotAction.js"></script>
+    <script src="js/skully.js"></script>
   </head>
   <body>
     <header id="pageTitle">
@@ -82,10 +83,8 @@
     </section>
 
     <div id="miniMap" class="ui-widget-content">
-      <div>
-        <h3 class="ui-widget-header">MINI MAP</h3>
+        <h3 class="ui-widget-header">MINI MAP</span></h3>
         <div id="miniMapContent" onresize="scaleMiniMap();"></div>
-      </div>
     </div>
 
     <div id="debugDialog" title="Trouble Debugging?">
@@ -103,9 +102,6 @@
     <script>
       var require = { paths: { vs: 'js/monaco-editor-min/min/vs' } };
     </script>
-    <!-- <script src="js/monaco-editor-min/min/vs/loader.js"></script>
-        <script src="js/monaco-editor-min/min/vs/editor/editor.main.nls.js"></script>
-        <script src="js/monaco-editor-min/min/vs/editor/editor.main.js"></script> -->
     <script src="node_modules/monaco-editor/min/vs/loader.js"></script>
     <script src="node_modules/monaco-editor/min/vs/editor/editor.main.nls.js"></script>
     <script src="node_modules/monaco-editor/min/vs/editor/editor.main.js"></script>
@@ -139,6 +135,24 @@
       // on page read, bind control events and start loading data
       $().ready(async () => {
         console.log('Document ready, loading...');
+
+        // make miniMap stowable
+        $('#miniMap > h3').dblclick(() => {
+          const mm = $('#miniMap');
+
+          if ($('#miniMapContent').css('display') === 'none') {
+            mm.css('min-height', 'var(--miniMapBaseSize)');
+            $('#miniMapContent').show();
+            mm.resizable( "enable" );
+            scaleMiniMap();
+          } else {
+            mm.css('min-height', '0');
+            mm.height($('#miniMap > h3').height());
+            $('#miniMapContent').hide();
+            mm.resizable( "disable" );
+          }
+
+        });
 
         $('#btnSaveBotCode').click(() => {
           versionBotCode($('#selBot :selected').val(), editor.getValue());
@@ -232,10 +246,8 @@
         // manage save button states when content changes
         editor.getModel().onDidChangeContent(event => {
           if (monaco.editor.getModelMarkers().length > 0) {
-            console.log('errors');
             setWarningCues(true);
           } else {
-            console.log('all good');
             setWarningCues(false);
           }
           if (pageLoadComplete) {

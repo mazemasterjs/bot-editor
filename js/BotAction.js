@@ -78,30 +78,29 @@ async function startActionChain(action, callback) {
   return await executeAction(action)
     .then(data => {
       // console.log('BotAction.startActionChain() -> gameFuncs.executeAction Response: ' + JSON.stringify(data));
+
+      // Stop the chain if EMERGENCY STOP was requested
       setTimeout(() => {
         if (EMERGENCY_STOP_BUTTON_PUSHED) {
-          $('#emergencyStopDialog').html(`<img src="images/fail/${Math.floor(Math.random() * 32)}.gif" style="width:100%; min-height:100px" />`);
+          $('#emergencyStopDialog').html(`<img src="images/fail/${Math.floor(Math.random() * FAIL_IMG_COUNT)}.gif" style="width:100%; min-height:100px" />`);
           $('#emergencyStopDialog').dialog('open');
           logMessage('err', 'EMERGENCY STOP');
           return;
-        } else {
+        }
+
+        // Only continue chain if game is still in progress
+        if (data.game.score.gameResult === GAME_RESULTS.IN_PROGRESS) {
           callback(data);
         }
       }, CALLBACK_DELAY);
     })
-    .catch(gameNotFoundErr => {
-      if (gameNotFoundErr.status === 404) {
+    .catch(reqError => {
+      if (reqError.status === 404) {
         logMessage('err', 'Game Not Found', `Game ${curGame.gameId} was not found. Please start a new game and try again.`);
-        throw gameNotFoundErr;
+        throw reqError;
       } else {
-        console.log('BotAtion.startActionChain() -> gameFuncs.executeAction Error: ' + JSON.stringify(gameNotFoundErr));
-        setTimeout(() => {
-          if (EMERGENCY_STOP_BUTTON_PUSHED) {
-            return;
-          } else {
-            callback(gameNotFoundErr);
-          }
-        }, CALLBACK_DELAY);
+        console.log('BotAtion.startActionChain() -> gameFuncs.executeAction Error: ' + JSON.stringify(reqError));
+        logMessage('err', `ACTION ERROR - ${reqError.message}`, reqError.trace);
       }
     });
 }

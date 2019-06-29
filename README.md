@@ -13,6 +13,13 @@ MazeMasterJS Bot Editor
 
 ## Change Notes
 
+### v0.5.1
+
+- Updates to support response data changes from game-server
+- MiniMap now gets a cool skull text image when game ends
+- added a jsonToStr() function that injecst spaces before commas to allow word-wrap
+  - in engram output
+
 ### v0.5.0
 
 - Updated response rendering for new engrams
