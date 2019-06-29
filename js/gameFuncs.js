@@ -2,8 +2,8 @@ const FAIL_IMG_COUNT = 31;
 const SUCC_IMG_COUNT = 32;
 const AJAX_TIMEOUT = 5000;
 
-//const GAME_URL = 'http://mazemasterjs.com/game';
-const GAME_URL = 'http://localhost:8080/game';
+const GAME_URL = 'http://mazemasterjs.com/game';
+// const GAME_URL = 'http://localhost:8080/game';
 const MAZE_URL = 'http://mazemasterjs.com/api/maze';
 const TEAM_URL = 'http://mazemasterjs.com/api/team';
 // const TEAM_URL = 'http://localhost:8083/api/team';
@@ -194,7 +194,7 @@ function loadBotCode(botId, version) {
       logMessage(
         'log',
         `"${$('#selBot :selected').attr('name')}" v${botCode.version} Loaded.`,
-        `"${$('#selBot :selected').attr('name')}" v${botCode.version} was saved on ${date.toLocaleDateString()} at ${date.toLocaleTimeString()}.`,
+        `"${$('#selBot :selected').attr('name')}" v${botCode.version} was last saved on ${date.toLocaleDateString()} at ${date.toLocaleTimeString()}.`,
       );
 
       // load the code into the editor
@@ -610,12 +610,12 @@ function validateSyntax() {
   let markers = monaco.editor.getModelMarkers();
 
   if (markers.length > 0) {
-    let msg = '<span style="color:antiquewhite">';
+    let msg = '<span class="botCodeError">';
     for (const marker of markers) {
       msg += `Line <b>${marker.endLineNumber}</b>, Column <b>${marker.endColumn}</b>: ${marker.message}<br>`;
     }
     msg += '</span>';
-    logMessage('wrn', 'Bot Run Aborted - Syntax Error(s) Found', msg);
+    logMessage('err', 'BOT CODE HAS ERRORS', msg);
   }
 
   return markers.length === 0;
@@ -783,6 +783,8 @@ function faceAvatar(textMap, dir) {
 
 // Enable chrome's data-loss warning if there are unsaved code changes
 function setSaveButtonStates(enabled) {
+  if (!pageLoadComplete) return;
+
   if (enabled) {
     $('#btnSaveBotCode').attr('disabled', false);
     $('#btnSaveBotCode').removeClass('btnDisabled');

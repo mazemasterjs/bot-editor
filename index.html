@@ -10,10 +10,11 @@
     <!-- Fonts  / Icons-->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css?family=Quicksand&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Dosis|Share+Tech+Mono&display=swap" rel="stylesheet" />
 
     <!-- Monaco -->
     <link rel="stylesheet" data-name="vs/editor/editor.main" href="js/monaco-editor-min/min/vs/editor/editor.main.css" />
-    
+
     <!-- jQuery -->
     <script src="js/jquery-3.4.1.min.js"></script>
 
@@ -31,6 +32,7 @@
     <script src="js/BotAction.js"></script>
     <script src="js/skully.js"></script>
   </head>
+
   <body>
     <header id="pageTitle">
       <h2>MazeMasterJS - Bot Editor</h2>
@@ -82,8 +84,8 @@
     </section>
 
     <div id="miniMap" class="ui-widget-content">
-        <h3 class="ui-widget-header">MINI MAP</span></h3>
-        <div id="miniMapContent" onresize="scaleMiniMap();"></div>
+      <h3 class="ui-widget-header">MINI MAP</h3>
+      <div id="miniMapContent" onresize="scaleMiniMap();"></div>
     </div>
 
     <div id="debugDialog" title="Trouble Debugging?">
@@ -113,8 +115,8 @@
 
       // prettier-ignore
       monaco.languages.typescript.javascriptDefaults.addExtraLib(
-              BOT_ACTION_DECLARATION,
-            );
+      BOT_ACTION_DECLARATION,
+    );
 
       let model = monaco.editor.createModel(startingScript, 'javascript');
 
@@ -142,15 +144,14 @@
           if ($('#miniMapContent').css('display') === 'none') {
             mm.css('min-height', 'var(--miniMapBaseSize)');
             $('#miniMapContent').show();
-            mm.resizable( "enable" );
+            mm.resizable('enable');
             scaleMiniMap();
           } else {
             mm.css('min-height', '0');
             mm.height($('#miniMap > h3').height());
             $('#miniMapContent').hide();
-            mm.resizable( "disable" );
+            mm.resizable('disable');
           }
-
         });
 
         $('#btnSaveBotCode').click(() => {
