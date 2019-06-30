@@ -8,49 +8,11 @@ let EMERGENCY_STOP_BUTTON_PUSHED = false;
  * Sends a command to the MazeMasterJS Game Server
  *
  * @param {action} action Actions include a command, a direction, and an optional message.
- */
-async function sendAction(action) {
-  console.log('sendAction', curGame.gameId, action);
-
-  if (!action) {
-    const err = new Error('Missing Action - You must supply an action object.');
-    logMessage('err', 'Invalid Action', err.message);
-    return Promise.reject(err);
-  }
-
-  if (!action.command) {
-    const err = new Error('Missing action.command - Your action must include a command.');
-    logMessage('err', 'Missing action.command', err.message);
-    return Promise.reject(err);
-  }
-
-  if (!curGame.gameId || curGame.gameId.trim() === '') {
-    const err = new Error('Invalid Game - sendAction() requires an a valid gameId.');
-    logMessage('err', 'Invalid Game', err.message);
-    return Promise.reject(err);
-  } else {
-    action.gameId = curGame.gameId;
-  }
-
-  return await executeAction(action)
-    .then(data => {
-      // console.log('BotAction.sendAction() -> gameFuncs.executeAction Response: ' + JSON.stringify(data));
-      return Promise.resolve(data);
-    })
-    .catch(error => {
-      // console.log('BotAtion.sendAction() -> gameFuncs.executeAction Error: ' + JSON.stringify(error));
-      return Promise.reject(error);
-    });
-}
-
-/**
- * Sends a command to the MazeMasterJS Game Server
- *
- * @param {action} action Actions include a command, a direction, and an optional message.
  * @param {action} callback The function to call back to with response data.
  */
-async function startActionChain(action, callback) {
-  console.log('startActionChain', curGame.gameId, action);
+async function SendAction(action, callback) {
+  const method = `SendAction(action, callback)`;
+  console.log(method, action, callback);
 
   if (!action) {
     const actErr = new Error('Missing Action - You must supply an action object.');
@@ -91,8 +53,8 @@ async function startActionChain(action, callback) {
           return;
         }
 
-        // Only continue chain if game is still in progress
-        if (data.game.score.gameResult === GAME_RESULTS.IN_PROGRESS) {
+        // Only continue chain if game is still in progress and callback is set
+        if (callback !== undefined && data.game.score.gameResult === GAME_RESULTS.IN_PROGRESS) {
           callback(data);
         }
       }, CALLBACK_DELAY);

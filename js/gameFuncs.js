@@ -491,14 +491,30 @@ async function loadGame(gameId) {
 }
 
 /**
- * Starts a bot - debugging optional
+ * Starts the bot by injecting and calling the solveMaze() function with or without
+ * injected callback and debugger lines.
  *
- * @param {*} debug
- * @return {Promise}
+ * @param {*} singleStep - if true, starts the bot without a callback parameter
+ * @param {*} debug - adds/removes debugger; lines in bot code, as needed
  *
  */
-async function startBot(debug = false) {
+async function startBot(singleStep = true, debug = false) {
   console.log('startBot', debug);
+  const injectionTag = '// @INJECTED_CODE\n';
+  const stepStart = injectionTag + 'solveMaze();\n';
+  const loopStart = injectionTag + 'solveMaze({"data": "nothing to see here"}, solveMaze);\n';
+  const debugScript = injectionTag + 'debugger;';
+
+  // validate and report errors - if any are found, do not continue
+  if (!validateSyntax()) {
+    return;
+  }
+
+  let botCode = editor.getValue() + '';
+  if (botCode.trim() === '') {
+    logMessage('err', 'NO CODE TO RUN', 'Your bot code editor appears to be empty. You must write some code before you can run it!');
+    return;
+  }
 
   if (curGame.gameId === undefined) {
     const gameReady = await startGame()
@@ -531,17 +547,11 @@ async function startBot(debug = false) {
     // if we didn't get a good game, bail out - start/getGame functions will log the errors.
     if (!gameReady) {
       const startBotErr = new Error('Unable to start or load a game.');
+      logMessage('err', 'UNABLE TO START GAME', 'An error is preventing a game from being created and/or started. Seek assistance.');
       console.error('startBot', startBotErr);
-      return Promise.reject(startBotErr);
+      return;
     }
   }
-
-  // validate and report errors - if any are found, do not continue
-  if (!validateSyntax()) {
-    //    return;
-  }
-
-  let bot = editor.getValue();
 
   // save any outstanding changes when run
   if ($('#btnSaveBotCode').hasClass('btnEnabled')) {
@@ -550,20 +560,23 @@ async function startBot(debug = false) {
 
   // If debugging, inject a debugger; command at the
   // start of the script if one isn't already found elsewhere.
-  if (debug && bot.indexOf('debugger;') === -1) {
-    bot = 'debugger;\n' + bot;
+  if (debug && botCode.indexOf('debugger;') === -1) {
+    botCode = debugScript + botCode;
   }
 
   // if not debugging, strip out all the debugger; instances
   // before execution
   if (!debug) {
-    bot = bot.replace(/debugger;/g, '');
+    botCode = botCode.replace(/debugger;/g, '');
   }
 
   try {
-    // const kickOffScripot = 'solveMaze(curGame.'
-    // bot =
-    eval(bot);
+    if (singleStep) {
+      botCode = botCode + stepStart;
+    } else {
+      botCode = botCode + loopStart;
+    }
+    eval(botCode);
   } catch (evalErr) {
     console.error(evalErr);
     logMessage('err', `Bot Code Error: ${evalErr.message}`, `${JSON.stringify(evalErr, null, 2)}`);
@@ -630,27 +643,33 @@ function renderAction(result) {
     logMsg += '<hr>';
   }
 
+  // use a hash of the action as the base ID for collapsible engram content
+  const actId = hashString(JSON.stringify(action));
+
   // log the local "here" engram
-  logMsg += `<h5>ENGRAM.HERE</h5>`;
-  logMsg += `<span class='engramData'><b>.exitNorth=</b>${jsonToStr(engram.here.exitNorth)}</span>`;
-  logMsg += `<span class='engramData'><b>.exitSouth=</b>${jsonToStr(engram.here.exitSouth)}</span>`;
-  logMsg += `<span class='engramData'><b>.exitEast=</b>${jsonToStr(engram.here.exitEast)}</span>`;
-  logMsg += `<span class='engramData'><b>.exitWest=</b>${jsonToStr(engram.here.exitWest)}</span>`;
-  logMsg += `<span class='engramData'><b>.messages=</b>${jsonToStr(engram.here.messages)}</span>`;
-  logMsg += `<span class='engramData'><b>.intuition=</b>${jsonToStr(engram.here.intuition)}</span>`;
+  logMsg += `<div id="${actId}_HERE" class="engramContainer" onclick="toggleEngramContent('${actId}_HERE');">`;
+  logMsg += `  <h5><span id="${actId}_HERE_icon" class="ui-icon ui-icon-plusthick"></span>ENGRAM.HERE</h5>`;
+  logMsg += `  <p class='engramData' style="display:none"><b>.exitNorth=</b>${jsonToStr(engram.here.exitNorth)}</p>`;
+  logMsg += `  <p class='engramData' style="display:none"><b>.exitSouth=</b>${jsonToStr(engram.here.exitSouth)}</p>`;
+  logMsg += `  <p class='engramData' style="display:none"><b>.exitEast=</b>${jsonToStr(engram.here.exitEast)}</p>`;
+  logMsg += `  <p class='engramData' style="display:none"><b>.exitWest=</b>${jsonToStr(engram.here.exitWest)}</p>`;
+  logMsg += `  <p class='engramData' style="display:none"><b>.messages=</b>${jsonToStr(engram.here.messages)}</p>`;
+  logMsg += `  <p class='engramData' style="display:none"><b>.intuition=</b>${jsonToStr(engram.here.intuition)}</p>`;
+  logMsg += `</div>`;
 
   // log directional engrams
   for (const dir in DIRS) {
     if (DIRS[dir] >= DIRS.NORTH && DIRS[dir] <= DIRS.WEST) {
-      logMsg += `<h5>ENGRAM.${dir}</h5>`;
-      logMsg += `<span class='engramData'><b>.see=</b>${jsonToStr(engram[dir.toLowerCase()].see)}</span>`;
-      logMsg += `<span class='engramData'><b>.hear=</b>${jsonToStr(engram[dir.toLowerCase()].hear)}</span>`;
-      logMsg += `<span class='engramData'><b>.smell=</b>${jsonToStr(engram[dir.toLowerCase()].smell)}</span>`;
-      logMsg += `<span class='engramData'><b>.feel=</b>${jsonToStr(engram[dir.toLowerCase()].feel)}</span>`;
-      logMsg += `<span class='engramData'><b>.taste=</b>${jsonToStr(engram[dir.toLowerCase()].taste)}</span>`;
+      logMsg += `<div id="${actId}_${dir}" class="engramContainer" onclick="toggleEngramContent('${actId}_${dir}');">`;
+      logMsg += `  <h5><span id="${actId}_${dir}_icon" class="ui-icon ui-icon-plusthick"></span>ENGRAM.${dir}</h5>`;
+      logMsg += `  <p class='engramData' style="display:none"><b>.see=</b>${jsonToStr(engram[dir.toLowerCase()].see)}</p>`;
+      logMsg += `  <p class='engramData' style="display:none"><b>.hear=</b>${jsonToStr(engram[dir.toLowerCase()].hear)}</p>`;
+      logMsg += `  <p class='engramData' style="display:none"><b>.smell=</b>${jsonToStr(engram[dir.toLowerCase()].smell)}</p>`;
+      logMsg += `  <p class='engramData' style="display:none"><b>.feel=</b>${jsonToStr(engram[dir.toLowerCase()].feel)}</p>`;
+      logMsg += `  <p class='engramData' style="display:none"><b>.taste=</b>${jsonToStr(engram[dir.toLowerCase()].taste)}</p>`;
+      logMsg += `</div>`;
     }
   }
-
   logMsg += '</div>';
 
   // track total move count and score
@@ -914,4 +933,45 @@ function setSaveButtonStates(enabled) {
     $('#btnSaveBotCode').removeClass('btnEnabled');
     $('#btnSaveBotCode').attr('title', '');
   }
+}
+
+/**
+ * Toggles display of an engram Data container
+ *
+ * @param {*} containerId
+ */
+function toggleEngramContent(containerId) {
+  const icon = $(`#${containerId}_icon`);
+  const content = $(`#${containerId} > p`);
+
+  if (content.css('display') !== 'none') {
+    icon.removeClass('ui-icon-minusthick');
+    icon.addClass('ui-icon-plusthick');
+    content.hide();
+  } else {
+    icon.addClass('ui-icon-minusthick');
+    icon.removeClass('ui-icon-plusthick');
+    content.show();
+  }
+}
+
+/**
+ * Generates a hash for the given text.
+ * Based on a string prototype https://werxltd.com/wp/2010/05/13/javascript-implementation-of-javas-string-hashcode-method/
+ *
+ * @param {string} source - the source string to generate a hash from
+ * @return {string}
+ */
+function hashString(source) {
+  let hash = 0;
+
+  if (source.length === 0) return hash;
+
+  for (let i = 0; i < source.length; i++) {
+    const chr = source.charCodeAt(i);
+    hash = (hash << 5) - hash + chr;
+    hash |= 0; // Convert to 32bit integer
+  }
+
+  return hash;
 }

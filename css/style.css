@@ -238,7 +238,7 @@ pre {
 
 .logMsgHdr {
   color: #faebd7;
-  border-top: solid 1px deb887;
+  border-top: solid 1px #deb887;
   border-bottom: solid 1px #deb887;
   background-color: rgba(150, 135, 115, 0.2);
 }
@@ -252,31 +252,44 @@ pre {
   overflow-wrap: break-word;
 }
 
-.actionBody > b {
+.actionBody b {
   color: goldenrod;
 }
 
-.actionBody > h5 {
+.actionBody h5 {
   text-align: left;
   font-size: 1rem;
   font-weight: lighter;
   margin: 0.1rem 0.5rem 0.1rem 0;
   color: powderblue;
   /* border-top: solid 1px rgba(176, 224, 230, 0.5); */
-  border-bottom: solid 1px rgba(176, 224, 230, 0.75);
+  /* border-bottom: solid 1px rgba(176, 224, 230, 0.75); */
 }
 
-.actionBody > .engramData {
-  display: inline-block;
+.engramContainer {
+  margin: 0.5rem;
+  padding: 0px;
+  line-height: 0.25rem;
+
+  /* border: solid 1px red; */
+}
+
+.actionBody .engramContainer:hover {
+  cursor: pointer;
+}
+
+.engramData {
+  display: none;
+  /* visibility: hidden; */
+  line-height: 1rem;
+  margin: 0;
   overflow-x: auto;
   white-space: pre-wrap;
-  white-space: -moz-pre-wrap;
-  white-space: -pre-wrap;
-  white-space: -o-pre-wrap;
   word-wrap: break-word;
 }
 
-.actionBody > .engramData > b {
+.actionBody .engramData > b {
+  text-align: left;
   color: goldenrod;
 }
 
@@ -339,7 +352,7 @@ pre {
   display: grid;
   margin: none;
   grid-column-gap: 0.5rem;
-  grid-template-columns: 70vw 26vw;
+  grid-template-columns: 60vw 36vw;
   grid-template-rows: 75vh;
 }
 

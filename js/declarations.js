@@ -3,17 +3,12 @@ declarations.push('');
 declarations.push('/**');
 declarations.push(' * Sends a command to the MazeMasterJS Game Server');
 declarations.push(' *');
-declarations.push(' * @param {action} action Actions include a command, a direction, and an optional message.');
+declarations.push(' * @param {action} action Actions include: command, direction, and (optional) message.');
+declarations.push(
+  ' * @param {callback} callback The function return a server response to, usually solveMaze. If no callback is provided, your bot will not receive result data from the action you sent.',
+);
 declarations.push(' */');
-declarations.push('declare function sendAction(action: Action): void');
-
-declarations.push('/**');
-declarations.push(' * Starts a chain of events');
-declarations.push(' *');
-declarations.push(' * @param {action} action Actions include a command, a direction, and an optional message.');
-declarations.push(' * @param {callback} the function to call after the action is completed');
-declarations.push(' */');
-declarations.push('declare function startActionChain(action: Action, callback: function): void');
+declarations.push('declare function SendAction(action: any, callback?: any): void');
 
 declarations.push('declare const DIRECTIONS = {');
 declarations.push('  NONE: 0,');

@@ -47,6 +47,7 @@
           Version Bot
         </button>
         <button id="btnStartBot" class="btnBot btnEnabled" title="Run Bot (shortcut: F5 in editor)">Run Bot</button>
+        <button id="btnStepBot" class="btnBot btnEnabled" title="Run Bot (shortcut: [SHIFT + F5] in editor)">Step Bot</button>
         <button id="btnDebugBot" class="btnBot btnEnabled" title="Debug Bot (shortcut: [CTRL + F5] in editor)">
           Debug Bot
           <span
@@ -56,7 +57,7 @@
             onmouseout="$('#debugDialog').dialog('close');"
           ></span>
         </button>
-        <button id="btnEmergencyStop" class="btnEmergencyStop" title="">
+        <button id="btnEmergencyStop" class="btnEmergencyStop" title="Runaway bot? Click here... Does nothing if your bot isn't running.">
           STOP
         </button>
       </div>
@@ -86,7 +87,7 @@
       <div id="miniMapContent" onresize="scaleMiniMap();"></div>
     </div>
 
-    <div id="debugDialog" title="Trouble Debugging?">
+    <div id="debugDialog" title="Trouble Debugging?" style="display: none">
       <h3>TIP 1</h3>
       <p>The developer console need to be open for debugging. Press F12 to toggle it.</p>
       <h3>TIP 2</h3>
@@ -158,12 +159,21 @@
 
         $('#btnStartBot').click(() => {
           EMERGENCY_STOP_BUTTON_PUSHED = false;
-          startBot(false);
+          startBot(false, false);
+        });
+
+        $('#btnStepBot').click(() => {
+          EMERGENCY_STOP_BUTTON_PUSHED = false;
+          startBot(true, true);
         });
 
         $('#btnDebugBot').click(() => {
           EMERGENCY_STOP_BUTTON_PUSHED = false;
-          startBot(true);
+          if ($('#chkSingleStep :checked').length > 0) {
+            startBot(true, true);
+          } else {
+            startBot(false, true);
+          }
         });
 
         $('#btnEmergencyStop').click(() => {
