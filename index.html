@@ -57,7 +57,7 @@
             onmouseout="$('#debugDialog').dialog('close');"
           ></span>
         </button>
-        <button id="btnEmergencyStop" class="btnEmergencyStop" title="Runaway bot? Click here... Does nothing if your bot isn't running.">
+        <button id="btnEmergencyStop" class="btnEmergencyStop" title="Runaway bot? Click here!">
           STOP
         </button>
       </div>
@@ -238,12 +238,17 @@
 
         // F5 within the code editor will run the bot
         let runBotBinding = editor.addCommand(monaco.KeyCode.F5, function() {
-          startBot(false);
+          startBot(false, false);
         });
 
         // CTRL+F5 within the code editor will debug the bot
         let debugBotBinding = editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.F5, function() {
-          startBot(true);
+          startBot(false, true);
+        });
+
+        // SHIFT+F5 within the code editor will step-run the bot
+        let stepBotBinding = editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.F5, function() {
+          startBot(true, true);
         });
 
         // CTRL+S will auto-format and version the bot code
