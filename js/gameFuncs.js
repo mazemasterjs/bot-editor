@@ -3,8 +3,10 @@ const FAIL_IMG_COUNT = 31;
 const SUCC_IMG_COUNT = 32;
 const AJAX_TIMEOUT = 5000;
 
-const GAME_URL = 'http://mazemasterjs.com/game';
-// const GAME_URL = 'http://localhost:8080/game';
+const myCreds = 'a3JlZWJvZzoxc3VwZXIx'; // TODO btoa(userName + ':' + password)
+
+// const GAME_URL = 'http://mazemasterjs.com/game';
+const GAME_URL = 'http://localhost:8080/game';
 const MAZE_URL = 'http://mazemasterjs.com/api/maze';
 const TEAM_URL = 'http://mazemasterjs.com/api/team';
 // const TEAM_URL = 'http://localhost:8083/api/team';
@@ -60,18 +62,24 @@ function loadMazes() {
   const MAZE_GET_URL = `${MAZE_URL}/get`;
   console.log(' -> loadMazes -> ', MAZE_GET_URL);
 
-  return $.getJSON(MAZE_GET_URL, mazes => {
-    $('#selMaze').empty();
-
-    for (const maze of mazes) {
-      let opt = "<option value='" + maze.id + "'>";
-      opt += `${maze.name} (${maze.height} x ${maze.width})`;
-      opt += '</option>';
-      $('#selMaze').append(opt);
-    }
-    return Promise.resolve();
-  }).fail(err => {
-    logMessage('err', 'ERROR LOADING MAZES', err !== undefined ? `${error.status} - ${error.statusText}` : undefined);
+  return $.ajax({
+    url: MAZE_GET_URL,
+    dataType: 'json',
+    method: 'GET',
+    headers: { Authorization: 'Basic ' + myCreds },
+    success: function(mazes) {
+      $('#selMaze').empty();
+      for (const maze of mazes) {
+        let opt = "<option value='" + maze.id + "'>";
+        opt += `${maze.name} (${maze.height} x ${maze.width})`;
+        opt += '</option>';
+        $('#selMaze').append(opt);
+      }
+      return Promise.resolve();
+    },
+    error: function(mazeLoadErr) {
+      logMessage('err', 'ERROR LOADING MAZES', mazeLoadErr !== undefined ? `${mazeLoadErr.status} - ${mazeLoadErr.statusText}` : undefined);
+    },
   });
 }
 
@@ -83,19 +91,24 @@ function loadMazes() {
 function loadTeams() {
   const TEAM_GET_URL = `${TEAM_URL}/get`;
   console.log('  -> loadTeams -> ', TEAM_GET_URL);
-  return $.getJSON(TEAM_GET_URL, data => {
-    teams = data;
-    $('#selTeam').empty();
-
-    for (const team of teams) {
-      let opt = "<option value='" + team.id + "'>";
-      opt += team.name;
-      opt += '</option>';
-      $('#selTeam').append(opt);
-    }
-    return Promise.resolve();
-  }).fail(err => {
-    logMessage('err', 'ERROR LOADING TEAMS', err.status !== 0 ? `${error.status} - ${error.statusText}` : undefined);
+  return $.ajax({
+    url: TEAM_GET_URL,
+    dataType: 'json',
+    method: 'GET',
+    headers: { Authorization: 'Basic ' + myCreds },
+    success: function(teams) {
+      $('#selTeam').empty();
+      for (const team of teams) {
+        let opt = "<option value='" + team.id + "'>";
+        opt += team.name;
+        opt += '</option>';
+        $('#selTeam').append(opt);
+      }
+      return Promise.resolve();
+    },
+    error: function(error) {
+      logMessage('err', 'ERROR LOADING TEAMS', err.status !== 0 ? `${error.status} - ${error.statusText}` : undefined);
+    },
   });
 }
 
@@ -106,28 +119,33 @@ function loadTeams() {
 async function loadBots(teamId) {
   const BOT_GET_URL = `${TEAM_URL}/get?id=${teamId}`;
   console.log('   -> loadBots -> ', teamId, BOT_GET_URL);
-  if (!teams || !teamId) return;
+  if (!teamId) return;
 
-  return $.getJSON(BOT_GET_URL, data => {
-    team = data[0];
-    $('#selBot').empty();
+  return $.ajax({
+    url: BOT_GET_URL,
+    dataType: 'json',
+    method: 'GET',
+    headers: { Authorization: 'Basic ' + myCreds },
+    success: function(data) {
+      const team = data[0];
+      $('#selBot').empty();
 
-    for (const bot of team.bots) {
-      const botSel = `<option value='${bot.id}' name='${bot.name}'>${bot.name} (${bot.coder})</option>`;
-      $('#selBot').append(botSel);
-    }
+      for (const bot of team.bots) {
+        const botSel = `<option value='${bot.id}' name='${bot.name}'>${bot.name} (${bot.coder})</option>`;
+        $('#selBot').append(botSel);
+      }
 
-    let debugBotSel = "<option value='jd-test-bot'>";
-    debugBotSel += 'jd-test-bot (jd-test-bot)';
-    debugBotSel += '</option>';
-    $('#selBot').append(debugBotSel);
-  })
-    .done(() => {
-      loadBotVersions($('#selBot :selected').val());
-    })
-    .fail(err => {
+      let debugBotSel = "<option value='jd-test-bot'>";
+      debugBotSel += 'jd-test-bot (jd-test-bot)';
+      debugBotSel += '</option>';
+      $('#selBot').append(debugBotSel);
+    },
+    error: function(error) {
       logMessage('err', 'ERROR LOADING BOTS', err.status !== 0 ? `${error.status} - ${error.statusText}` : undefined);
-    });
+    },
+  }).done(() => {
+    loadBotVersions($('#selBot :selected').val());
+  });
 }
 
 /**
@@ -137,33 +155,38 @@ async function loadBots(teamId) {
  * @return {void}
  */
 function loadBotVersions(botId, autoLoadBot = true) {
-  const url = TEAM_URL + '/get/botCode?botId=' + botId;
+  const BOT_CODE_URL = TEAM_URL + '/get/botCode?botId=' + botId;
   console.log('    -> loadBotVersions ->', botId);
 
-  return $.getJSON(url, docs => {
-    $('#selBotVersion').empty();
-    let versionCount = 0;
-    for (const doc of docs.reverse()) {
-      versionCount++;
-      if (versionCount > 25) {
-        deleteBotCodeVersion(botId, doc.version);
-      } else {
-        $('#selBotVersion').append(`<option value="${doc.version}">${doc.version}</option>`);
+  return $.ajax({
+    url: BOT_CODE_URL,
+    dataType: 'json',
+    method: 'GET',
+    headers: { Authorization: 'Basic ' + myCreds },
+    success: function(docs) {
+      $('#selBotVersion').empty();
+      let versionCount = 0;
+      for (const doc of docs.reverse()) {
+        versionCount++;
+        if (versionCount > 25) {
+          deleteBotCodeVersion(botId, doc.version);
+        } else {
+          $('#selBotVersion').append(`<option value="${doc.version}">${doc.version}</option>`);
+        }
       }
-    }
-  })
-    .done(() => {
-      if (autoLoadBot) {
-        loadBotCode($('#selBot :selected').val());
-      }
-    })
-    .fail(err => {
+    },
+    error: function(error) {
       if (err.status === 404) {
         versionBotCode(botId, editor.getValue());
       } else {
         logMessage('err', `ERROR LOADING BOT CODE &rsaquo; ${err.status} (${err.statusText})`, `Cannot load code for bot&nbsp;<b>${botId}</b>.`);
       }
-    });
+    },
+  }).done(() => {
+    if (autoLoadBot) {
+      loadBotCode($('#selBot :selected').val());
+    }
+  });
 }
 
 /**
@@ -173,11 +196,12 @@ function loadBotVersions(botId, autoLoadBot = true) {
  * @param {*} version
  */
 function deleteBotCodeVersion(botId, version) {
-  const deleteUrl = TEAM_URL + `/delete/botCode/${botId}/${version}`;
+  const DELETE_BOT_CODE_URL = TEAM_URL + `/delete/botCode/${botId}/${version}`;
   $.ajax({
-    url: deleteUrl,
+    url: DELETE_BOT_CODE_URL,
     dataType: 'json',
     method: 'DELETE',
+    headers: { Authorization: 'Basic ' + myCreds },
     success: function() {
       logMessage('wrn', `BOT CODE v${version} DELETED`);
     },
@@ -196,7 +220,7 @@ function deleteBotCodeVersion(botId, version) {
  * @return {void}
  */
 function loadBotCode(botId, version) {
-  let url = TEAM_URL + '/get/botCode?botId=' + botId;
+  const BOT_CODE_URL = TEAM_URL + '/get/botCode?botId=' + botId;
 
   // if no version supplied, assume we're getting the latest version
   if (version === undefined) {
@@ -205,43 +229,50 @@ function loadBotCode(botId, version) {
     url += `&version=${version}`;
   }
 
-  console.log('loadBotCode', botId, version, url);
+  console.log('loadBotCode', botId, version, BOT_CODE_URL);
 
-  return $.getJSON(url, docs => {
-    // if no version given, find the higest version returned
-    if (version === -1) {
-      version = docs.sort((first, second) => {
-        return parseInt(second.version.replace(/\./g, '')) - parseInt(first.version.replace(/\./g, ''));
-      })[0].version;
-    }
+  return $.ajax({
+    url: BOT_CODE_URL,
+    dataType: 'json',
+    method: 'GET',
+    headers: { Authorization: 'Basic ' + myCreds },
+    success: function(docs) {
+      // if no version given, find the higest version returned
+      if (version === -1) {
+        version = docs.sort((first, second) => {
+          return parseInt(second.version.replace(/\./g, '')) - parseInt(first.version.replace(/\./g, ''));
+        })[0].version;
+      }
 
-    // now load the version
-    const botCode = docs.find(doc => {
-      return doc.version === version;
-    });
+      // now load the version
+      const botCode = docs.find(doc => {
+        return doc.version === version;
+      });
 
-    if (botCode !== undefined) {
-      $('#selBotVersion').val(botCode.version);
-      const date = new Date(botCode.lastUpdated);
+      if (botCode !== undefined) {
+        $('#selBotVersion').val(botCode.version);
+        const date = new Date(botCode.lastUpdated);
 
-      logMessage(
-        'log',
-        `"${$('#selBot :selected').attr('name')}" v${botCode.version} Loaded.`,
-        `"${$('#selBot :selected').attr('name')}" v${botCode.version} was last saved on ${date.toLocaleDateString()} at ${date.toLocaleTimeString()}.`,
-      );
+        logMessage(
+          'log',
+          `"${$('#selBot :selected').attr('name')}" v${botCode.version} Loaded.`,
+          `"${$('#selBot :selected').attr('name')}" v${botCode.version} was last saved on ${date.toLocaleDateString()} at ${date.toLocaleTimeString()}.`,
+        );
 
-      // load the code into the editor
-      editor.setValue(botCode.code);
+        // load the code into the editor
+        editor.setValue(botCode.code);
 
-      // and format the code once that's done
-      editor.trigger('', 'editor.action.formatDocument');
+        // and format the code once that's done
+        editor.trigger('', 'editor.action.formatDocument');
 
-      setSaveButtonStates(false);
-    } else {
-      logMessage('wrn', 'BOT CODE NOT FOUND');
-    }
-  }).fail(err => {
-    logMessage('err', `ERROR LOADING BOT CODE &rsaquo; ${err.status} (${err.statusText})`, `Cannot load code for bot&nbsp;<b>${botId}.</b>`);
+        setSaveButtonStates(false);
+      } else {
+        logMessage('wrn', 'BOT CODE NOT FOUND');
+      }
+    },
+    error: function(error) {
+      logMessage('err', `ERROR LOADING BOT CODE &rsaquo; ${err.status} (${err.statusText})`, `Cannot load code for bot&nbsp;<b>${botId}.</b>`);
+    },
   });
 }
 
@@ -262,6 +293,7 @@ function updateBotCode(botId, version, code) {
     dataType: 'json',
     timeout: AJAX_TIMEOUT,
     method: 'PUT',
+    headers: { Authorization: 'Basic ' + myCreds },
     data: {
       botId: botId,
       version: version,
@@ -313,11 +345,16 @@ function getNextVersion(version) {
  * @return {void}
  */
 function versionBotCode(botId, code) {
-  const getUrl = TEAM_URL + '/get/botCode?botId=' + botId;
-  const putUrl = TEAM_URL + '/insert/botCode';
+  const GET_BOT_CODE_URL = TEAM_URL + '/get/botCode?botId=' + botId;
+  const PUT_BOT_CODE_URL = TEAM_URL + '/insert/botCode';
 
-  $.getJSON(getUrl, docs => {})
-    .done(docs => {
+  $.ajax({
+    url: GET_BOT_CODE_URL,
+    dataType: 'json',
+    timeout: AJAX_TIMEOUT,
+    method: 'GET',
+    headers: { Authorization: 'Basic ' + myCreds },
+    success: function(docs) {
       topVersion = docs.sort((first, second) => {
         return parseInt(second.version.replace(/\./g, '')) - parseInt(first.version.replace(/\./g, ''));
       })[0].version;
@@ -326,10 +363,11 @@ function versionBotCode(botId, code) {
       console.log('Next Version=' + newVersion);
 
       $.ajax({
-        url: putUrl,
+        url: PUT_BOT_CODE_URL,
         dataType: 'json',
         timeout: AJAX_TIMEOUT,
         method: 'PUT',
+        headers: { Authorization: 'Basic ' + myCreds },
         data: {
           botId: botId,
           version: newVersion,
@@ -349,13 +387,14 @@ function versionBotCode(botId, code) {
       }).done(() => {
         loadBotVersions(botId, false);
       });
-    })
-    .fail(err => {
+    },
+    error: function(error) {
       $.ajax({
-        url: putUrl,
+        url: PUT_BOT_CODE_URL,
         dataType: 'json',
         timeout: AJAX_TIMEOUT,
         method: 'PUT',
+        headers: { Authorization: 'Basic ' + myCreds },
         data: {
           botId: botId,
           version: '0.0.1',
@@ -371,7 +410,8 @@ function versionBotCode(botId, code) {
           logMessage('err', 'ERROR INITIALIZING BOT', `${error.status} - ${error.statusText} initializing bot&nbsp;<b>${botId}</span>`);
         },
       });
-    });
+    },
+  });
 }
 
 /**
@@ -422,6 +462,7 @@ async function startGame() {
     dataType: 'json',
     timeout: AJAX_TIMEOUT,
     method: 'PUT', // method is any HTTP method
+    headers: { Authorization: 'Basic ' + myCreds },
     data: {}, // data as js object
     success: function(data) {
       $('#textLog').empty();
@@ -466,10 +507,17 @@ async function startGame() {
  * @param {*} gameId
  */
 async function loadGame(gameId) {
-  const url = GAME_URL + `/get/${gameId}`;
-  console.log('loadGame', url);
-  return await $.getJSON(url)
-    .then(data => {
+  const LOAD_GAME_URL = GAME_URL + `/get/${gameId}`;
+  console.log('loadGame', LOAD_GAME_URL);
+
+  return await $.ajax({
+    url: LOAD_GAME_URL,
+    dataType: 'json',
+    timeout: AJAX_TIMEOUT,
+    method: 'PUT', // method is any HTTP method
+    headers: { Authorization: 'Basic ' + myCreds },
+    data: {}, // data as js object
+    success: function(data) {
       curGame = data.game;
       totalScore = data.totalScore;
       totalMoves = data.game.score.moveCount;
@@ -482,12 +530,13 @@ async function loadGame(gameId) {
       scaleMiniMap(mapText);
 
       return Promise.resolve(data.game);
-    })
-    .catch(err => {
+    },
+    error: async function(err) {
       console.error('loadGame', err);
       logMessage('err', 'ERROR LOADING GAME', err.status !== 0 ? `${error.status} - ${error.statusText}` : undefined);
       return Promise.reject(err);
-    });
+    },
+  });
 }
 
 /**
