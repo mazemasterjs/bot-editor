@@ -220,13 +220,13 @@ function deleteBotCodeVersion(botId, version) {
  * @return {void}
  */
 function loadBotCode(botId, version) {
-  const BOT_CODE_URL = TEAM_URL + '/get/botCode?botId=' + botId;
+  let BOT_CODE_URL = TEAM_URL + '/get/botCode?botId=' + botId;
 
   // if no version supplied, assume we're getting the latest version
   if (version === undefined) {
     version = -1;
   } else {
-    url += `&version=${version}`;
+    BOT_CODE_URL += `&version=${version}`;
   }
 
   console.log('loadBotCode', botId, version, BOT_CODE_URL);
