@@ -455,7 +455,7 @@ async function startGame() {
   const mazeId = $('#selMaze').val();
   const teamId = $('#selTeam').val();
   const botId = $('#selBot :selected').val();
-  const url = GAME_URL + '/new/' + mazeId + '/' + teamId + '/' + botId + '?forceId=FORCED_JD_EDITOR_002';
+  const url = GAME_URL + '/new/' + mazeId + '/' + teamId + '/' + botId;
 
   return await $.ajax({
     url: url,
