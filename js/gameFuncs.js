@@ -514,7 +514,7 @@ async function loadGame(gameId) {
     url: LOAD_GAME_URL,
     dataType: 'json',
     timeout: AJAX_TIMEOUT,
-    method: 'PUT', // method is any HTTP method
+    method: 'GET', // method is any HTTP method
     headers: { Authorization: 'Basic ' + myCreds },
     data: {}, // data as js object
     success: function(data) {
@@ -733,6 +733,7 @@ function renderAction(result) {
   let textMap;
   if (result.game.score.gameResult !== GAME_RESULTS.IN_PROGRESS) {
     logMessage('err', 'GAME OVER');
+    curGame = {};
     scaleMiniMap(skully);
   } else {
     textMap = faceAvatar(action.outcomes[action.outcomes.length - 1], result.playerFacing);
