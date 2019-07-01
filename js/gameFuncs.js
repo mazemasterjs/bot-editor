@@ -647,12 +647,13 @@ function stopBot() {
  */
 async function executeAction(action) {
   console.log('executeAction', action);
-  const url = GAME_URL + '/action';
+  const GAME_ACTION_URL = GAME_URL + '/action';
 
   return await $.ajax({
-    url: url,
-    method: 'PUT', // method is any HTTP method
+    url: GAME_ACTION_URL,
+    method: 'PUT',
     dataType: 'json',
+    headers: { Authorization: 'Basic ' + myCreds },
     data: action,
   })
     .then(data => {
