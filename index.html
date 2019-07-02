@@ -29,7 +29,6 @@
     <script src="js/enums.js"></script>
     <script src="js/gameFuncs.js"></script>
     <script src="js/declarations.js"></script>
-    <script src="js/BotAction.js"></script>
     <script src="js/skully.js"></script>
   </head>
 
@@ -163,16 +162,12 @@
 
         $('#btnStepBot').click(() => {
           EMERGENCY_STOP_BUTTON_PUSHED = false;
-          startBot(true, true);
+          startBot(true, false);
         });
 
         $('#btnDebugBot').click(() => {
           EMERGENCY_STOP_BUTTON_PUSHED = false;
-          if ($('#chkSingleStep :checked').length > 0) {
-            startBot(true, true);
-          } else {
-            startBot(false, true);
-          }
+          startBot(true, true);
         });
 
         $('#btnEmergencyStop').click(() => {

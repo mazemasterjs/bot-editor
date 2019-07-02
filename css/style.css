@@ -280,7 +280,7 @@ pre {
 .engramData {
   display: none;
   /* visibility: hidden; */
-  line-height: 1rem;
+  line-height: 1.25rem;
   margin: 0;
   overflow-x: auto;
   white-space: pre-wrap;

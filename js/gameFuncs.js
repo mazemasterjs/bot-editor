@@ -1,9 +1,18 @@
 /* eslint-disable no-unused-vars */
+const CALLBACK_DELAY = 50;
 const FAIL_IMG_COUNT = 31;
 const SUCC_IMG_COUNT = 32;
 const AJAX_TIMEOUT = 5000;
 
-const myCreds = 'a3JlZWJvZzoxc3VwZXIx'; // TODO btoa(userName + ':' + password)
+// eslint-disable-next-line prefer-const
+let EMERGENCY_STOP_BUTTON_PUSHED = false;
+
+// eslint-disable-next-line prefer-const
+let botCallback = null;
+let lastActionResult = null;
+
+// TODO: Replace myCreds with a login and use btoa(userName + ':' + password) to send the Basic Auth header
+const myCreds = 'a3JlZWJvZzoxc3VwZXIx';
 
 // const GAME_URL = 'http://mazemasterjs.com/game';
 const GAME_URL = 'http://localhost:8080/game';
@@ -288,6 +297,9 @@ function loadBotCode(botId, version) {
 function updateBotCode(botId, version, code) {
   const putUrl = TEAM_URL + '/update/botCode';
 
+  // first, format the code in the editor
+  editor.trigger('', 'editor.action.formatDocument');
+
   $.ajax({
     url: putUrl,
     dataType: 'json',
@@ -301,9 +313,7 @@ function updateBotCode(botId, version, code) {
     },
     success: function() {
       logMessage('bot', `"${$('#selBot :selected').attr('name')}" v<b>${version}</b>&nbsp;- Updated.`);
-
-      // and format the code once that's done
-      editor.trigger('', 'editor.action.formatDocument');
+      setSaveButtonStates(false);
     },
     error: function(error) {
       logMessage('err', 'ERROR UPDATING BOT CODE', `${error.status} - ${error.statusText}`);
@@ -472,6 +482,7 @@ async function startGame() {
       curGame = data.game;
       totalMoves = data.game.score.moveCount;
       totalScore = data.totalScore;
+      lastActionResult = data;
 
       // load the minimap
       scaleMiniMap(faceAvatar(data.action.outcomes[data.action.outcomes.length - 1], DIRS.SOUTH));
@@ -521,6 +532,7 @@ async function loadGame(gameId) {
       curGame = data.game;
       totalScore = data.totalScore;
       totalMoves = data.game.score.moveCount;
+      lastActionResult = data;
 
       // render the game action
       renderAction(data);
@@ -540,7 +552,7 @@ async function loadGame(gameId) {
 }
 
 /**
- * Starts the bot by injecting and calling the solveMaze() function with or without
+ * Starts the bot by injecting and calling the goBot() function with or without
  * injected callback and debugger lines.
  *
  * @param {*} singleStep - if true, starts the bot without a callback parameter
@@ -548,11 +560,12 @@ async function loadGame(gameId) {
  *
  */
 async function startBot(singleStep = true, debug = false) {
-  console.log('startBot', debug);
-  const injectionTag = '// @INJECTED_CODE\n';
-  const stepStart = injectionTag + 'solveMaze();\n';
-  const loopStart = injectionTag + 'solveMaze({"data": "nothing to see here"}, solveMaze);\n';
-  const debugScript = injectionTag + 'debugger;';
+  console.log('startBot', singleStep, debug);
+  const injectionTag = '\n// @INJECTED_CODE\n';
+  const debugStart = injectionTag + 'botCallback = null;\ngoBot(lastActionResult);';
+  const stepStart = injectionTag + 'botCallback = null;\ngoBot(lastActionResult);';
+  const loopStart = injectionTag + 'botCallback = goBot;\ngoBot(lastActionResult);';
+  const debugScript = injectionTag + 'debugger;\n';
 
   // validate and report errors - if any are found, do not continue
   if (!validateSyntax()) {
@@ -565,7 +578,7 @@ async function startBot(singleStep = true, debug = false) {
     return;
   }
 
-  if (curGame.gameId === undefined) {
+  if (curGame.gameId === undefined || lastActionResult === null) {
     const gameReady = await startGame()
       .then(newGame => {
         console.log('startBot -> Game created.', `GameId: ${newGame.gameId}`);
@@ -607,36 +620,23 @@ async function startBot(singleStep = true, debug = false) {
     updateBotCode($('#selBot :selected').val(), $('#selBotVersion :selected').val(), editor.getValue());
   }
 
-  // If debugging, inject a debugger; command at the
-  // start of the script if one isn't already found elsewhere.
+  // inject script values appropriate to the run time selected
   if (debug && botCode.indexOf('debugger;') === -1) {
-    botCode = debugScript + botCode;
-  }
-
-  // if not debugging, strip out all the debugger; instances
-  // before execution
-  if (!debug) {
+    const insKey = 'function goBot(data) {';
+    const insAt = botCode.indexOf(insKey);
+    const bcTop = botCode.substr(0, insAt + insKey.length);
+    const bcBot = botCode.substr(insAt + insKey.length);
+    botCode = bcTop + debugScript + bcBot + debugStart;
+  } else if (singleStep) {
     botCode = botCode.replace(/debugger;/g, '');
+    botCode = botCode + stepStart;
+  } else {
+    botCode = botCode.replace(/debugger;/g, '');
+    botCode = botCode + loopStart;
   }
 
-  try {
-    if (singleStep) {
-      botCode = botCode + stepStart;
-    } else {
-      botCode = botCode + loopStart;
-    }
-    eval(botCode);
-  } catch (evalErr) {
-    console.error(evalErr);
-    logMessage('err', `Bot Code Error: ${evalErr.message}`, `${JSON.stringify(evalErr, null, 2)}`);
-  }
-}
-
-/**
- * Stop the bot..
- */
-function stopBot() {
-  console.log('Stopping Bot #...');
+  // give the bot it's day in the sun...
+  eval(botCode); // <-- TRY/CATCH HERE MASKS ERRORS THAT HAPPEN WITHIN THE BOT - IN-BOT ERROR HANDLING WOULD BE WISE
 }
 
 /**
@@ -693,8 +693,8 @@ function renderAction(result) {
     logMsg += '<hr>';
   }
 
-  // use a hash of the action as the base ID for collapsible engram content
-  const actId = hashString(JSON.stringify(action));
+  // grab the current millis time as an action/engram ID
+  const actId = Date.now();
 
   // log the local "here" engram
   logMsg += `<div id="${actId}_HERE" class="engramContainer" onclick="toggleEngramContent('${actId}_HERE');">`;
@@ -732,9 +732,36 @@ function renderAction(result) {
   // log the game results if game has ended
   let textMap;
   if (result.game.score.gameResult !== GAME_RESULTS.IN_PROGRESS) {
-    logMessage('err', 'GAME OVER');
+    let msg = 'GAME OVER';
+
+    switch (result.game.score.gameResult) {
+      case GAME_RESULTS.DEATH_LAVA:
+        msg += ' - You stepped into the lava.';
+        scaleMiniMap(skully);
+        break;
+      case GAME_RESULTS.DEATH_TRAP:
+        msg += ' - You hit a trap.';
+        scaleMiniMap(skully);
+        break;
+      case GAME_RESULTS.OUT_OF_MOVES:
+        msg += ' - You ran out of moves.';
+        scaleMiniMap(skully);
+        break;
+      case GAME_RESULTS.WIN:
+        msg += ' - You won!';
+        scaleMiniMap('{{ CHEESE }}');
+        break;
+      case GAME_RESULTS.WIN_FLAWLESS:
+        msg += ' - You won... FLAWLESS VICTORY!';
+        scaleMiniMap('{{ GOUDA }}');
+        break;
+      default:
+        msg += ' - You lost somehow... gameResult=' + result.game.score.gameResult;
+        scaleMiniMap(skully);
+    }
+    logMessage('err', msg);
     curGame = {};
-    scaleMiniMap(skully);
+    botCallback = null;
   } else {
     textMap = faceAvatar(action.outcomes[action.outcomes.length - 1], result.playerFacing);
     const mmcPre = $('#miniMapContent > pre');
@@ -1007,22 +1034,63 @@ function toggleEngramContent(containerId) {
 }
 
 /**
- * Generates a hash for the given text.
- * Based on a string prototype https://werxltd.com/wp/2010/05/13/javascript-implementation-of-javas-string-hashcode-method/
+ * Sends a command to the MazeMasterJS Game Server
  *
- * @param {string} source - the source string to generate a hash from
- * @return {string}
+ * @param {action} action Actions include a command, a direction, and an optional message.
+ * @param {action} callback The function to call back to with response data.
  */
-function hashString(source) {
-  let hash = 0;
+async function SendAction(action) {
+  const method = `SendAction(action)`;
+  console.log(method, action, botCallback);
 
-  if (source.length === 0) return hash;
-
-  for (let i = 0; i < source.length; i++) {
-    const chr = source.charCodeAt(i);
-    hash = (hash << 5) - hash + chr;
-    hash |= 0; // Convert to 32bit integer
+  if (!action) {
+    const actErr = new Error('Missing Action - You must supply an action object.');
+    logMessage('err', 'Invalid Action', actErr.message);
+    throw actErr;
   }
 
-  return hash;
+  if (!action.command) {
+    const cmdErr = new Error('Missing action.command - Your action must include a command.');
+    logMessage('err', 'Missing action.command', cmdErr.message);
+    throw cmdErr;
+  }
+
+  if (!curGame || !curGame.gameId || curGame.gameId.trim() === '') {
+    const gameIdErr = new Error('Invalid Game - No game is currently in progress.');
+    logMessage('err', 'Invalid Game', gameIdErr.message);
+    throw gameIdErr;
+  } else {
+    action.gameId = curGame.gameId;
+  }
+
+  return await executeAction(action)
+    .then(data => {
+      lastActionResult = data;
+
+      // Stop the chain if EMERGENCY STOP was requested
+      setTimeout(() => {
+        if (EMERGENCY_STOP_BUTTON_PUSHED) {
+          $('#emergencyStopDialog').html(`<img src="images/fail/${Math.floor(Math.random() * FAIL_IMG_COUNT)}.gif" style="width:100%; min-height:100px" />`);
+          $('#emergencyStopDialog').dialog('open');
+          logMessage('err', 'EMERGENCY STOP');
+          return;
+        }
+
+        // Only continue chain if game is still in progress and botCallback is set
+        if (botCallback !== null && data.game.score.gameResult === GAME_RESULTS.IN_PROGRESS) {
+          botCallback(data);
+        } else {
+          console.log('Action Chain cannot continue.', 'gameResult=' + data.game.score.gameResult, 'botCallback=' + botCallback);
+        }
+      }, CALLBACK_DELAY);
+    })
+    .catch(reqError => {
+      if (reqError.status === 404) {
+        logMessage('err', 'Game Not Found', `Game ${curGame.gameId} was not found. Please start a new game and try again.`);
+        throw reqError;
+      } else {
+        console.log('SendAction() -> gameFuncs.executeAction Error: ' + JSON.stringify(reqError));
+        logMessage('err', `ACTION ERROR - ${reqError.message}`, reqError.trace);
+      }
+    });
 }

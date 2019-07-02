@@ -51,7 +51,7 @@ declarations.push('  QUIT: 12');
 declarations.push('};');
 
 // add a couple of aliases for common enums
-declarations.push('declare const DIRECTIONS = DIRS;');
+declarations.push('declare const DIRS = DIRECTIONS;');
 declarations.push('declare const CMDS = COMMANDS;');
 
 // eslint-disable-next-line no-unused-vars
