@@ -13,6 +13,10 @@ MazeMasterJS Bot Editor
 
 ## Change Notes
 
+### v0.5.2
+
+- added support for the sneak command
+
 ### v0.5.1
 
 - Updates to support response data changes from game-server

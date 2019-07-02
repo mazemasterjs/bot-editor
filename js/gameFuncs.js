@@ -14,8 +14,8 @@ let lastActionResult = null;
 // TODO: Replace myCreds with a login and use btoa(userName + ':' + password) to send the Basic Auth header
 const myCreds = 'a3JlZWJvZzoxc3VwZXIx';
 
-const GAME_URL = 'http://mazemasterjs.com/game';
-// const GAME_URL = 'http://localhost:8080/game';
+// const GAME_URL = 'http://mazemasterjs.com/game';
+const GAME_URL = 'http://localhost:8080/game';
 const MAZE_URL = 'http://mazemasterjs.com/api/maze';
 const TEAM_URL = 'http://mazemasterjs.com/api/team';
 // const TEAM_URL = 'http://localhost:8083/api/team';
@@ -75,8 +75,10 @@ function loadMazes() {
     url: MAZE_GET_URL,
     dataType: 'json',
     method: 'GET',
-    headers: { Authorization: 'Basic ' + myCreds },
-    success: function(mazes) {
+    headers: {
+      Authorization: 'Basic ' + myCreds
+    },
+    success: function (mazes) {
       $('#selMaze').empty();
       for (const maze of mazes) {
         let opt = "<option value='" + maze.id + "'>";
@@ -86,7 +88,7 @@ function loadMazes() {
       }
       return Promise.resolve();
     },
-    error: function(mazeLoadErr) {
+    error: function (mazeLoadErr) {
       logMessage('err', 'ERROR LOADING MAZES', mazeLoadErr !== undefined ? `${mazeLoadErr.status} - ${mazeLoadErr.statusText}` : undefined);
     },
   });
@@ -104,8 +106,10 @@ function loadTeams() {
     url: TEAM_GET_URL,
     dataType: 'json',
     method: 'GET',
-    headers: { Authorization: 'Basic ' + myCreds },
-    success: function(teams) {
+    headers: {
+      Authorization: 'Basic ' + myCreds
+    },
+    success: function (teams) {
       $('#selTeam').empty();
       for (const team of teams) {
         let opt = "<option value='" + team.id + "'>";
@@ -115,7 +119,7 @@ function loadTeams() {
       }
       return Promise.resolve();
     },
-    error: function(error) {
+    error: function (error) {
       logMessage('err', 'ERROR LOADING TEAMS', err.status !== 0 ? `${error.status} - ${error.statusText}` : undefined);
     },
   });
@@ -134,8 +138,10 @@ async function loadBots(teamId) {
     url: BOT_GET_URL,
     dataType: 'json',
     method: 'GET',
-    headers: { Authorization: 'Basic ' + myCreds },
-    success: function(data) {
+    headers: {
+      Authorization: 'Basic ' + myCreds
+    },
+    success: function (data) {
       const team = data[0];
       $('#selBot').empty();
 
@@ -149,7 +155,7 @@ async function loadBots(teamId) {
       debugBotSel += '</option>';
       $('#selBot').append(debugBotSel);
     },
-    error: function(error) {
+    error: function (error) {
       logMessage('err', 'ERROR LOADING BOTS', err.status !== 0 ? `${error.status} - ${error.statusText}` : undefined);
     },
   }).done(() => {
@@ -171,8 +177,10 @@ function loadBotVersions(botId, autoLoadBot = true) {
     url: BOT_CODE_URL,
     dataType: 'json',
     method: 'GET',
-    headers: { Authorization: 'Basic ' + myCreds },
-    success: function(docs) {
+    headers: {
+      Authorization: 'Basic ' + myCreds
+    },
+    success: function (docs) {
       $('#selBotVersion').empty();
       let versionCount = 0;
       for (const doc of docs.reverse()) {
@@ -184,7 +192,7 @@ function loadBotVersions(botId, autoLoadBot = true) {
         }
       }
     },
-    error: function(error) {
+    error: function (error) {
       if (err.status === 404) {
         versionBotCode(botId, editor.getValue());
       } else {
@@ -210,11 +218,13 @@ function deleteBotCodeVersion(botId, version) {
     url: DELETE_BOT_CODE_URL,
     dataType: 'json',
     method: 'DELETE',
-    headers: { Authorization: 'Basic ' + myCreds },
-    success: function() {
+    headers: {
+      Authorization: 'Basic ' + myCreds
+    },
+    success: function () {
       logMessage('wrn', `BOT CODE v${version} DELETED`);
     },
-    error: function(error) {
+    error: function (error) {
       logMessage('err', `ERROR DELETING BOT CODE v${version}`, error.message === undefined ? `${error.status} - ${error.statusText}` : error.message);
     },
   });
@@ -244,8 +254,10 @@ function loadBotCode(botId, version) {
     url: BOT_CODE_URL,
     dataType: 'json',
     method: 'GET',
-    headers: { Authorization: 'Basic ' + myCreds },
-    success: function(docs) {
+    headers: {
+      Authorization: 'Basic ' + myCreds
+    },
+    success: function (docs) {
       // if no version given, find the higest version returned
       if (version === -1) {
         version = docs.sort((first, second) => {
@@ -279,7 +291,7 @@ function loadBotCode(botId, version) {
         logMessage('wrn', 'BOT CODE NOT FOUND');
       }
     },
-    error: function(error) {
+    error: function (error) {
       logMessage('err', `ERROR LOADING BOT CODE &rsaquo; ${err.status} (${err.statusText})`, `Cannot load code for bot&nbsp;<b>${botId}.</b>`);
     },
   });
@@ -305,17 +317,19 @@ function updateBotCode(botId, version, code) {
     dataType: 'json',
     timeout: AJAX_TIMEOUT,
     method: 'PUT',
-    headers: { Authorization: 'Basic ' + myCreds },
+    headers: {
+      Authorization: 'Basic ' + myCreds
+    },
     data: {
       botId: botId,
       version: version,
       code,
     },
-    success: function() {
+    success: function () {
       logMessage('bot', `"${$('#selBot :selected').attr('name')}" v<b>${version}</b>&nbsp;- Updated.`);
       setSaveButtonStates(false);
     },
-    error: function(error) {
+    error: function (error) {
       logMessage('err', 'ERROR UPDATING BOT CODE', `${error.status} - ${error.statusText}`);
     },
   }).done(() => {
@@ -363,8 +377,10 @@ function versionBotCode(botId, code) {
     dataType: 'json',
     timeout: AJAX_TIMEOUT,
     method: 'GET',
-    headers: { Authorization: 'Basic ' + myCreds },
-    success: function(docs) {
+    headers: {
+      Authorization: 'Basic ' + myCreds
+    },
+    success: function (docs) {
       topVersion = docs.sort((first, second) => {
         return parseInt(second.version.replace(/\./g, '')) - parseInt(first.version.replace(/\./g, ''));
       })[0].version;
@@ -377,17 +393,19 @@ function versionBotCode(botId, code) {
         dataType: 'json',
         timeout: AJAX_TIMEOUT,
         method: 'PUT',
-        headers: { Authorization: 'Basic ' + myCreds },
+        headers: {
+          Authorization: 'Basic ' + myCreds
+        },
         data: {
           botId: botId,
           version: newVersion,
           code,
         },
-        success: function() {
+        success: function () {
           logMessage('bot', `"${$('#selBot :selected').attr('name')}" v<b>${newVersion}</b>&nbsp;- New Version Saved.`);
           setSaveButtonStates(false);
         },
-        error: function(error) {
+        error: function (error) {
           if (error.status !== 404) {
             logMessage('err', 'ERROR SAVING BOT', `${error.status} - ${error.statusText}`);
           } else {
@@ -398,25 +416,27 @@ function versionBotCode(botId, code) {
         loadBotVersions(botId, false);
       });
     },
-    error: function(error) {
+    error: function (error) {
       $.ajax({
         url: PUT_BOT_CODE_URL,
         dataType: 'json',
         timeout: AJAX_TIMEOUT,
         method: 'PUT',
-        headers: { Authorization: 'Basic ' + myCreds },
+        headers: {
+          Authorization: 'Basic ' + myCreds
+        },
         data: {
           botId: botId,
           version: '0.0.1',
           code,
         },
-        success: function() {
+        success: function () {
           logMessage('bot', `${$('selBot').name()}&nbsp;<b>v0.0.1</b>&nbsp;Activated!`);
           if ($('#selBotVersion').children().length === 0) {
             $('#selBotVersion').append(`<option value="${botId}">0.0.1</option>`);
           }
         },
-        error: function(error) {
+        error: function (error) {
           logMessage('err', 'ERROR INITIALIZING BOT', `${error.status} - ${error.statusText} initializing bot&nbsp;<b>${botId}</span>`);
         },
       });
@@ -472,9 +492,11 @@ async function startGame() {
     dataType: 'json',
     timeout: AJAX_TIMEOUT,
     method: 'PUT', // method is any HTTP method
-    headers: { Authorization: 'Basic ' + myCreds },
+    headers: {
+      Authorization: 'Basic ' + myCreds
+    },
     data: {}, // data as js object
-    success: function(data) {
+    success: function (data) {
       $('#textLog').empty();
       $('#actionLog').empty();
 
@@ -495,7 +517,7 @@ async function startGame() {
 
       return Promise.resolve(data.game);
     },
-    error: async function(err) {
+    error: async function (err) {
       if (err.responseJSON !== undefined) {
         const res = err.responseJSON;
         if (res.status === 400 && res.gameId !== undefined) {
@@ -526,9 +548,11 @@ async function loadGame(gameId) {
     dataType: 'json',
     timeout: AJAX_TIMEOUT,
     method: 'GET', // method is any HTTP method
-    headers: { Authorization: 'Basic ' + myCreds },
+    headers: {
+      Authorization: 'Basic ' + myCreds
+    },
     data: {}, // data as js object
-    success: function(data) {
+    success: function (data) {
       curGame = data.game;
       totalScore = data.totalScore;
       totalMoves = data.game.score.moveCount;
@@ -543,7 +567,7 @@ async function loadGame(gameId) {
 
       return Promise.resolve(data.game);
     },
-    error: async function(err) {
+    error: async function (err) {
       console.error('loadGame', err);
       logMessage('err', 'ERROR LOADING GAME', err.status !== 0 ? `${error.status} - ${error.statusText}` : undefined);
       return Promise.reject(err);
@@ -650,12 +674,14 @@ async function executeAction(action) {
   const GAME_ACTION_URL = GAME_URL + '/action';
 
   return await $.ajax({
-    url: GAME_ACTION_URL,
-    method: 'PUT',
-    dataType: 'json',
-    headers: { Authorization: 'Basic ' + myCreds },
-    data: action,
-  })
+      url: GAME_ACTION_URL,
+      method: 'PUT',
+      dataType: 'json',
+      headers: {
+        Authorization: 'Basic ' + myCreds
+      },
+      data: action,
+    })
     .then(data => {
       renderAction(data);
       return Promise.resolve(data);
