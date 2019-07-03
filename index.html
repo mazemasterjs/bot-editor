@@ -197,12 +197,12 @@
         });
 
         $('#selTeam').change(() => {
-          resetTrackingVars();
+          resetGlobals();
           loadBots($('#selTeam :selected').val());
         });
 
         $('#selBot').change(() => {
-          resetTrackingVars();
+          resetGlobals();
           loadBotVersions($('#selBot :selected').val());
           loadBotCode($('#selBot :selected').val());
         });
