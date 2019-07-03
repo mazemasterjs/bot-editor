@@ -103,7 +103,7 @@ function loadMazes() {
       }
       return Promise.resolve();
     },
-    error: function(mazeLoadErr) {
+    error: function (mazeLoadErr) {
       logMessage('err', 'ERROR LOADING MAZES', mazeLoadErr !== undefined ? `${mazeLoadErr.status} - ${mazeLoadErr.statusText}` : undefined);
     },
   });
@@ -132,7 +132,7 @@ function loadTeams() {
       }
       return Promise.resolve();
     },
-    error: function(error) {
+    error: function (error) {
       logMessage('err', 'ERROR LOADING TEAMS', err.status !== 0 ? `${error.status} - ${error.statusText}` : undefined);
     },
   });
@@ -166,7 +166,7 @@ async function loadBots(teamId) {
       debugBotSel += '</option>';
       $('#selBot').append(debugBotSel);
     },
-    error: function(error) {
+    error: function (error) {
       logMessage('err', 'ERROR LOADING BOTS', err.status !== 0 ? `${error.status} - ${error.statusText}` : undefined);
     },
   }).done(() => {
@@ -201,7 +201,7 @@ function loadBotVersions(botId, autoLoadBot = true) {
         }
       }
     },
-    error: function(error) {
+    error: function (error) {
       if (err.status === 404) {
         versionBotCode(botId, editor.getValue());
       } else {
@@ -231,7 +231,7 @@ function deleteBotCodeVersion(botId, version) {
     success: function() {
       logMessage('wrn', `BOT CODE v${version} DELETED`);
     },
-    error: function(error) {
+    error: function (error) {
       logMessage('err', `ERROR DELETING BOT CODE v${version}`, error.message === undefined ? `${error.status} - ${error.statusText}` : error.message);
     },
   });
@@ -296,7 +296,7 @@ function loadBotCode(botId, version) {
         logMessage('wrn', 'BOT CODE NOT FOUND');
       }
     },
-    error: function(error) {
+    error: function (error) {
       logMessage('err', `ERROR LOADING BOT CODE &rsaquo; ${err.status} (${err.statusText})`, `Cannot load code for bot&nbsp;<b>${botId}.</b>`);
     },
   });
@@ -328,11 +328,11 @@ function updateBotCode(botId, version, code) {
       version: version,
       code,
     },
-    success: function() {
+    success: function () {
       logMessage('bot', `"${$('#selBot :selected').attr('name')}" v<b>${version}</b>&nbsp;- Updated.`);
       setSaveButtonStates(false);
     },
-    error: function(error) {
+    error: function (error) {
       logMessage('err', 'ERROR UPDATING BOT CODE', `${error.status} - ${error.statusText}`);
     },
   }).done(() => {
@@ -400,11 +400,11 @@ function versionBotCode(botId, code) {
           version: newVersion,
           code,
         },
-        success: function() {
+        success: function () {
           logMessage('bot', `"${$('#selBot :selected').attr('name')}" v<b>${newVersion}</b>&nbsp;- New Version Saved.`);
           setSaveButtonStates(false);
         },
-        error: function(error) {
+        error: function (error) {
           if (error.status !== 404) {
             logMessage('err', 'ERROR SAVING BOT', `${error.status} - ${error.statusText}`);
           } else {
@@ -415,7 +415,7 @@ function versionBotCode(botId, code) {
         loadBotVersions(botId, false);
       });
     },
-    error: function(error) {
+    error: function (error) {
       $.ajax({
         url: PUT_BOT_CODE_URL,
         dataType: 'json',
@@ -427,13 +427,13 @@ function versionBotCode(botId, code) {
           version: '0.0.1',
           code,
         },
-        success: function() {
+        success: function () {
           logMessage('bot', `${$('selBot').name()}&nbsp;<b>v0.0.1</b>&nbsp;Activated!`);
           if ($('#selBotVersion').children().length === 0) {
             $('#selBotVersion').append(`<option value="${botId}">0.0.1</option>`);
           }
         },
-        error: function(error) {
+        error: function (error) {
           logMessage('err', 'ERROR INITIALIZING BOT', `${error.status} - ${error.statusText} initializing bot&nbsp;<b>${botId}</span>`);
         },
       });
@@ -499,7 +499,7 @@ async function startGame() {
     method: 'PUT', // method is any HTTP method
     headers: { Authorization: 'Basic ' + USER_CREDS },
     data: {}, // data as js object
-    success: function(data) {
+    success: function (data) {
       $('#textLog').empty();
       $('#actionLog').empty();
       resetGlobals();
@@ -521,7 +521,7 @@ async function startGame() {
 
       return Promise.resolve(data.game);
     },
-    error: async function(err) {
+    error: async function (err) {
       if (err.responseJSON !== undefined) {
         const res = err.responseJSON;
         if (res.status === 400 && res.gameId !== undefined) {
