@@ -824,6 +824,8 @@ function renderAction(result) {
         logMessage('err', msg, getEndGameImg(false));
     }
 
+    // TODO: RE-ENABLE FOR CAMP!!
+
     // if ($('#miniMapContent').css('display') !== 'none') {
     //   // set a nifty ascii on the minimap
     //   if (win) {

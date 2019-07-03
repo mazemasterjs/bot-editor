@@ -83,8 +83,9 @@
       </div>
     </section>
 
-    <div id="miniMap" class="ui-widget-content">
+    <div id="miniMap" class="ui-widget-content dimmable">
       <h3 class="ui-widget-header">MINI MAP</h3>
+      <input type="checkbox" id="chkAutoDim" name="autoDimMiniMap" title="Toggle Mini-Map Dimmer" />
       <div id="miniMapContent" onresize="scaleMiniMap();"></div>
     </div>
 
@@ -256,6 +257,15 @@
           at: 'right-20 bottom-15',
           of: '#editor',
           collision: 'fit',
+        });
+
+        let chkAutoDim = $('#chkAutoDim');
+        chkAutoDim.change(() => {
+          if (chkAutoDim.prop('checked')) {
+            $('#miniMap').removeClass('dimmable');
+          } else {
+            $('#miniMap').addClass('dimmable');
+          }
         });
 
         /** Set Editor Event Handlers **/
