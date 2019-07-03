@@ -386,7 +386,6 @@ function versionBotCode(botId, code) {
       })[0].version;
 
       const newVersion = getNextVersion(topVersion);
-      console.log('Next Version=' + newVersion);
 
       $.ajax({
         url: PUT_BOT_CODE_URL,
@@ -406,8 +405,6 @@ function versionBotCode(botId, code) {
         error: function(error) {
           if (error.status !== 404) {
             logMessage('err', 'ERROR SAVING BOT', `${error.status} - ${error.statusText}`);
-          } else {
-            console.log('New Bot - create base code version.');
           }
         },
       }).done(() => {
@@ -483,9 +480,10 @@ function logMessage(source, header, message) {
 /**
  * Attempts to create a new MMJS Game
  *
+ * @param {boolean} autoPlay - optional, if true will not reset all globals
  * @return {void}
  */
-async function startGame() {
+async function startGame(autoPlay = false) {
   const mazeId = $('#selMaze').val();
   const teamId = $('#selTeam').val();
   const botId = $('#selBot :selected').val();
@@ -499,15 +497,20 @@ async function startGame() {
     headers: { Authorization: 'Basic ' + USER_CREDS },
     data: {}, // data as js object
     success: function(data) {
-      $('#textLog').empty();
-      $('#actionLog').empty();
-      resetGlobals();
-
-      // set tracking vars to new game values
       curGame = data.game;
-      totalMoves = data.game.score.moveCount;
-      totalScore = data.totalScore;
       lastActionResult = data;
+
+      if (!autoPlay) {
+        $('#textLog').empty();
+        $('#actionLog').empty();
+        resetGlobals();
+        totalScore = totalScore + data.totalScore;
+        totalMoves = data.game.score.moveCount;
+      } else {
+        BOT_RAM = {};
+        totalScore = totalScore + data.totalScore;
+        totalMoves = totalMoves + data.game.score.moveCount;
+      }
 
       // load the minimap
       scaleMiniMap(faceAvatar(data.action.outcomes[data.action.outcomes.length - 1], DIRS.SOUTH));
@@ -727,7 +730,7 @@ async function executeAction(action) {
  *
  * @param {*} result
  */
-function renderAction(result) {
+async function renderAction(result) {
   console.log('renderAction', result);
   const action = result.action;
   const engram = action.engram;
@@ -792,9 +795,6 @@ function renderAction(result) {
     let win = false;
     let msg = 'GAME OVER';
 
-    // reset globals - game is over
-    resetGlobals();
-
     // present game over cues
     switch (result.game.score.gameResult) {
       case GAME_RESULTS.DEATH_LAVA:
@@ -822,6 +822,20 @@ function renderAction(result) {
       default:
         msg += ' - You lost somehow... gameResult=' + result.game.score.gameResult;
         logMessage('err', msg, getEndGameImg(false));
+    }
+
+    // if we win in full-auto mode, start the next maze automatically
+    if (win && botCallback !== null) {
+      const selMaze = $('#selMaze');
+      const curIdx = $('#selMaze :selected').index();
+      if (selMaze.children().length > curIdx) {
+        selMaze.children()[curIdx + 1].selected = true;
+        await startGame(true);
+        startBot(false, false);
+      }
+    } else {
+      // reset globals - game is over
+      resetGlobals();
     }
 
     // TODO: RE-ENABLE FOR CAMP!!
@@ -1136,7 +1150,7 @@ function toggleEngramContent(containerId) {
  */
 async function SendAction(action) {
   const method = `SendAction(action)`;
-  console.log(method, action, botCallback);
+  console.log(method, action, 'botCallback == null ? ' + botCallback === null);
 
   if (!action) {
     const actErr = new Error('Missing Action - You must supply an action object.');
@@ -1175,7 +1189,7 @@ async function SendAction(action) {
         if (botCallback !== null && data.game.score.gameResult === GAME_RESULTS.IN_PROGRESS) {
           botCallback(data);
         } else {
-          console.log('Action Chain cannot continue.', 'gameResult=' + data.game.score.gameResult, 'botCallback=' + botCallback);
+          console.log(method, 'Action chain ended or stopped, gameResult=' + data.game.score.gameResult, 'botCallback == null? ' + botCallback === null);
         }
       }, CALLBACK_DELAY);
     })
@@ -1185,7 +1199,7 @@ async function SendAction(action) {
         resetGlobals();
         throw reqError;
       } else {
-        console.log('SendAction() -> gameFuncs.executeAction Error: ' + JSON.stringify(reqError));
+        console.log('SendAction() -> gameFuncs.executeAction Error: ' + reqError.trace);
         logMessage('err', `ACTION ERROR - ${reqError.message}`, reqError.trace);
       }
     });
