@@ -15,6 +15,7 @@ MazeMasterJS Bot Editor
 [ ] Add support for caching maze, team, and bot lists in local storage, too?
 [ ] Finish header work (player greeting, etc)
 [ ] Need to rework engram styling after some action log container changes
+[ ] Re-enable skully / cheese minimap cover at game end before CAMP
 
 ## Change Notes
 
