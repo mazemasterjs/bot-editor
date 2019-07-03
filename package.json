@@ -1,6 +1,6 @@
 {
   "name": "bot-editor",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "A bot editor for MazeMasterJS.com",
   "main": "index.js",
   "scripts": {
