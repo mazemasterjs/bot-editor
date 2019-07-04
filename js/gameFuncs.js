@@ -497,6 +497,7 @@ async function startGame(autoPlay = false) {
     headers: { Authorization: 'Basic ' + USER_CREDS },
     data: {}, // data as js object
     success: function(data) {
+      console.log('startGame() : curGame set.', data.game);
       curGame = data.game;
       lastActionResult = data;
 
@@ -558,6 +559,7 @@ async function loadGame(gameId) {
     data: {}, // data as js object
     success: function(data) {
       resetGlobals();
+      console.log('loadGame() : curGame set.', data.game);
       curGame = data.game;
       totalScore = data.totalScore;
       totalMoves = data.game.score.moveCount;
@@ -589,6 +591,11 @@ async function quitGame() {
   const QUIT_GAME_URL = GAME_URL + `/abandon/${curGame.gameId}`;
   console.log('quitGame', QUIT_GAME_URL);
 
+  // clear logs and miniMap first
+  $('#textLog').empty();
+  $('#actionLog').empty();
+  $('#miniMapContent').empty();
+
   await $.ajax({
     url: QUIT_GAME_URL,
     dataType: 'json',
@@ -596,15 +603,18 @@ async function quitGame() {
     method: 'DELETE', // method is any HTTP method
     headers: { Authorization: 'Basic ' + USER_CREDS },
     success: function(data) {
-      resetGlobals();
-      $('#textLog').empty();
-      $('#actionLog').empty();
-      $('#miniMapContent').empty();
+      console.log('quitGame, successful.');
+      logMessage('wrn', 'GAME QUIT SUCESSFUL');
     },
-  }).catch(quitError => {
-    console.error('quitGame', quitError);
-    logMessage('err', 'ERROR QUITTING GAME', quitError.status !== 0 ? `${quitError.status} - ${quitError.statusText}` : undefined);
-  });
+  })
+    .catch(quitError => {
+      console.error('quitGame', quitError);
+      logMessage('err', 'ERROR QUITTING GAME', quitError.status !== 0 ? `${quitError.status} - ${quitError.statusText}` : undefined);
+    })
+    .always(() => {
+      // reset globals no matter what
+      resetGlobals();
+    });
 }
 
 /**
@@ -637,7 +647,8 @@ async function startBot(singleStep = true, debug = false) {
   if (curGame.gameId === undefined || lastActionResult === null) {
     const gameReady = await startGame()
       .then(newGame => {
-        console.log('startBot -> Game created.', `GameId: ${newGame.gameId}`);
+        curGame = newGame;
+        console.log('startBot -> Game created.', `GameId: ${newGame.game.gameId}`);
         return true;
       })
       .catch(async ngErr => {
@@ -696,7 +707,9 @@ async function startBot(singleStep = true, debug = false) {
   }
 
   // give the bot it's day in the sun...
+  console.log('startBot() : Running eval(botCode)');
   eval(botCode); // <-- TRY/CATCH HERE MASKS ERRORS THAT HAPPEN WITHIN THE BOT - IN-BOT ERROR HANDLING WOULD BE WISE
+  console.log('startBot() : botCode eval complete');
 }
 
 /**
@@ -826,15 +839,34 @@ async function renderAction(result) {
 
     // if we win in full-auto mode, start the next maze automatically
     if (win && botCallback !== null) {
+      let idx = $('#selMaze :selected').index();
       const selMaze = $('#selMaze');
-      const curIdx = $('#selMaze :selected').index();
-      if (selMaze.children().length > curIdx) {
-        selMaze.children()[curIdx + 1].selected = true;
-        await startGame(true);
-        startBot(false, false);
+      const kids = selMaze.children();
+      const max = kids.length - 1;
+
+      if (idx < max) {
+        idx++;
+        while (kids[idx].value.toLowerCase().indexOf('debug') > -1) {
+          logMessage('wrn', 'Skipping debug maze: ' + kids[idx].value);
+          idx++;
+          if (idx >= kids.length - 1) {
+            break; // reached the end of the maze list
+          }
+        }
+
+        // load the next maze if we're not at the end
+        if (idx < max) {
+          selMaze.children()[idx].selected = true;
+          await startGame(true).then(() => {
+            startBot(false, false);
+          });
+        }
       }
+    } else if (win) {
+      // game is over - end of maze list
+      logMessage('win', 'End of maze list - CONGRATULATIONS!');
+      resetGlobals();
     } else {
-      // reset globals - game is over
       resetGlobals();
     }
 
@@ -1199,8 +1231,8 @@ async function SendAction(action) {
         resetGlobals();
         throw reqError;
       } else {
-        console.log('SendAction() -> gameFuncs.executeAction Error: ' + reqError.trace);
-        logMessage('err', `ACTION ERROR - ${reqError.message}`, reqError.trace);
+        console.log('SendAction() -> gameFuncs.executeAction Error: ' + reqError.statusText);
+        logMessage('err', `ACTION ERROR - ${reqError.status}`, reqError.statusText);
       }
     });
 }
