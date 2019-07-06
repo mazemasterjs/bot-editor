@@ -1,8 +1,8 @@
 /* eslint-disable no-unused-vars */
 
 const MAZE_URL = 'http://mazemasterjs.com/api/maze';
-// const GAME_URL = 'http://mazemasterjs.com/game';
-const GAME_URL = 'http://localhost:8080/game';
+const GAME_URL = 'http://mazemasterjs.com/game';
+// const GAME_URL = 'http://localhost:8080/game';
 const TEAM_URL = 'http://mazemasterjs.com/api/team';
 const USER_CREDS = 'a3JlZWJvZzoxc3VwZXIx'; // TODO: Replace myCreds with a login and use btoa(userName + ':' + password) to send the Basic Auth header
 
@@ -159,11 +159,6 @@ async function loadBots(teamId) {
         const botSel = `<option value='${bot.id}' name='${bot.name}'>${bot.name} (${bot.coder})</option>`;
         $('#selBot').append(botSel);
       }
-
-      let debugBotSel = "<option value='jd-test-bot'>";
-      debugBotSel += 'jd-test-bot (jd-test-bot)';
-      debugBotSel += '</option>';
-      $('#selBot').append(debugBotSel);
     },
     error: function(error) {
       logMessage('err', 'ERROR LOADING BOTS', err.status !== 0 ? `${error.status} - ${error.statusText}` : undefined);
@@ -200,11 +195,11 @@ function loadBotVersions(botId, autoLoadBot = true) {
         }
       }
     },
-    error: function(error) {
-      if (err.status === 404) {
+    error: function(lbvError) {
+      if (lbvError.status === 404) {
         versionBotCode(botId, editor.getValue());
       } else {
-        logMessage('err', `ERROR LOADING BOT CODE &rsaquo; ${err.status} (${err.statusText})`, `Cannot load code for bot&nbsp;<b>${botId}</b>.`);
+        logMessage('err', `ERROR LOADING BOT CODE &rsaquo; ${lbvError.status} (${lbvError.statusText})`, `Cannot load code for bot&nbsp;<b>${botId}</b>.`);
       }
     },
   }).done(() => {
@@ -295,8 +290,12 @@ function loadBotCode(botId, version) {
         logMessage('wrn', 'BOT CODE NOT FOUND');
       }
     },
-    error: function(error) {
-      logMessage('err', `ERROR LOADING BOT CODE &rsaquo; ${err.status} (${err.statusText})`, `Cannot load code for bot&nbsp;<b>${botId}.</b>`);
+    error: function(codeLoadError) {
+      logMessage(
+        'err',
+        `ERROR LOADING BOT CODE &rsaquo; ${codeLoadError.status} (${codeLoadError.statusText})`,
+        `Cannot load code for bot&nbsp;<b>${botId}.</b>`,
+      );
     },
   });
 }
@@ -588,7 +587,12 @@ async function loadGame(gameId) {
  * @param {*} gameId
  */
 async function quitGame() {
+  if (!curGame || curGame.gameId === undefined) {
+    logMessage('wrn', 'QUIT FAILED', "You can't quit what you haven't started. Run your bot to start (or reconnect to) a game.");
+    return;
+  }
   const QUIT_GAME_URL = GAME_URL + `/abandon/${curGame.gameId}`;
+
   console.log('quitGame', QUIT_GAME_URL);
 
   // clear logs and miniMap first
@@ -618,8 +622,8 @@ async function quitGame() {
 }
 
 /**
- * Starts the bot by injecting and calling the goBot() function with or without
- * injected callback and debugger lines.
+ * Ensures prerequisites are met and in place before actually attempting to
+ * execute the bot's code via runBot()
  *
  * @param {*} singleStep - if true, starts the bot without a callback parameter
  * @param {*} debug - adds/removes debugger; lines in bot code, as needed
@@ -627,18 +631,13 @@ async function quitGame() {
  */
 async function startBot(singleStep = true, debug = false) {
   console.log('startBot', `singleStep=${singleStep}`, `debug=${debug}`);
-  const injectionTag = '\n// @INJECTED_CODE\n';
-  const debugStart = injectionTag + 'botCallback = null;\ngoBot(lastActionResult);';
-  const stepStart = injectionTag + 'botCallback = null;\ngoBot(lastActionResult);';
-  const loopStart = injectionTag + 'botCallback = goBot;\ngoBot(lastActionResult);';
-  const debugScript = injectionTag + 'debugger;\n';
 
   // validate and report errors - if any are found, do not continue
   if (!validateSyntax()) {
     return;
   }
 
-  let botCode = editor.getValue() + '';
+  const botCode = editor.getValue() + '';
   if (botCode.trim() === '') {
     logMessage('err', 'NO CODE TO RUN', 'Your bot code editor appears to be empty. You must write some code before you can run it!');
     return;
@@ -686,6 +685,27 @@ async function startBot(singleStep = true, debug = false) {
   if ($('#btnSaveBotCode').hasClass('btnEnabled')) {
     updateBotCode($('#selBot :selected').val(), $('#selBotVersion :selected').val(), editor.getValue());
   }
+
+  // everything appears to be in place, so go ahead and run the bot
+  runBot(botCode, singleStep, debug);
+}
+
+/**
+ * After startBot() makes sure a game is in order, runBot() actually preps and
+ * executes the bot's code.
+ *
+ * @param {string} botCode - the bot's code, pulled from editor.getValue() during startBot()
+ * @param {boolean} singleStep - if true, starts the bot without a callback parameter
+ * @param {boolean} debug - adds/removes debugger; lines in bot code, as needed
+ *
+ */
+function runBot(botCode, singleStep, debug) {
+  console.log('runBot', `singleStep=${singleStep}`, `debug=${debug}`);
+  const injectionTag = '\n// @INJECTED_CODE\n';
+  const debugStart = injectionTag + 'botCallback = null;\ngoBot(lastActionResult);';
+  const stepStart = injectionTag + 'botCallback = null;\ngoBot(lastActionResult);';
+  const loopStart = injectionTag + 'botCallback = goBot;\ngoBot(lastActionResult);';
+  const debugScript = injectionTag + 'debugger;\n';
 
   // inject script values appropriate to the run time selected
   if (debug) {
