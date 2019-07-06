@@ -19,6 +19,17 @@ MazeMasterJS Bot Editor
 
 ## Change Notes
 
+### v0.7.0
+
+- Bot editor no longer uses eval() to run bots, instead coverting the bot code into a js function calling it
+- All bot scripts will now have "use strict"; forcibly injected if it's not found to already be in place
+- Reworked all .ajax calls to use promises instead of default callbacks
+- Added modal loading dialog
+- Run, Step, and Debug bot buttons now auto-disable until the outstanding action / chain is complete
+- Reformatted engrams slightly to (hopefully) improve legibility and style
+- Reformatted outcomes slightly to (hopefully) improve legibility and style
+- work started on login / landing
+
 ### v0.6.0
 
 - Win / Lose images displayed in action log when game ends
