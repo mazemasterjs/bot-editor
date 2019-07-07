@@ -11,38 +11,37 @@
     <link href="https://fonts.googleapis.com/css?family=Nanum+Gothic+Coding&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css?family=Quicksand&display=swap" rel="stylesheet" />
 
-    <!-- Monaco -->
+    <!-- third-party styles -->
     <link rel="stylesheet" data-name="vs/editor/editor.main" href="js/monaco-editor-min/min/vs/editor/editor.main.css" />
-
-    <!-- jQuery -->
-    <script src="js/jquery-3.4.1.min.js"></script>
-
-    <!-- jQuery UI -->
     <link rel="stylesheet" href="js/jquery-ui-1.12.1/jquery-ui.css" />
 
-    <!-- <script src="external/jquery/jquery.js"></script> -->
+    <!-- third-party scripts -->
+    <script src="js/js.cookie.min.js"></script>
+    <script src="js/jquery-3.4.1.min.js"></script>
     <script src="js/jquery-ui-1.12.1/jquery-ui.min.js"></script>
 
-    <!-- MazeMaster Stuff -->
+    <!-- MazeMaster styles -->
     <link href="css/style.css" rel="stylesheet" type="text/css" />
+
+    <!-- MazeMaster scripts -->
     <script src="js/enums.js"></script>
     <script src="js/gameFuncs.js"></script>
     <script src="js/declarations.js"></script>
     <script src="js/skully.js"></script>
     <script src="js/cheesy.js"></script>
-
-    <style>
-      .no-close .ui-dialog-titlebar-close {
-        display: none;
-      }
-    </style>
   </head>
 
   <body>
     <header>
       <div id="pageHeader">
-        <div class="grid-item">MazeMasterJS</div>
-        <div class="grid-item">Hello</div>
+        <div class="grid-item">
+          <img id="imgLogo" src="images/mazemaster-logo.png" />
+        </div>
+        <div class="grid-item">
+          <p id="userName">Welcome, Coder!</p>
+          <p id="userTeam">Team:</p>
+          <p id="userBot">Bot:</p>
+        </div>
       </div>
     </header>
 
@@ -99,8 +98,8 @@
     </div>
 
     <div id="loadingDialog" title="-= LOADING =-" style="display: none">
-      <p id="loadMsgHeader">MazeMasterJS.<b>botEditor</b> is now...</p>
-      <p id="loadMsgBody">Loading page elements...</p>
+      <p id="loadMsgHeader">MazeMasterJS.botEditor is now...</p>
+      <p id="loadMsgBody">... authenticating user</p>
     </div>
 
     <div id="debugDialog" title="Trouble Debugging?" style="display: none">
@@ -159,6 +158,22 @@
           modal: true,
           closeOnEscape: false,
         });
+
+        if (Cookies.get('userName') === undefined || Cookies.get('userCreds') === undefined) {
+          let countdown = 3;
+          $('#loadMsgHeader').css('text-align', 'center');
+          $('#loadMsgBody').css('text-align', 'center');
+          $('#loadMsgHeader').html(`<b>Authentication Failure</b>`);
+          $('#loadMsgBody').html(`<span style='color:antiquewhite'>Redirecting you to the log in page in</span>&nbsp;<b>${countdown}</b>...`);
+          setInterval(() => {
+            countdown--;
+            $('#loadMsgBody').html(`<span style='color:antiquewhite'>Redirecting you to the log in page in</span>&nbsp;<b>${countdown}</b>...`);
+          }, 1000);
+          setTimeout(() => {
+            window.location = 'login.html';
+          }, 3500);
+          return;
+        }
 
         $('#loadMsgBody').text('... binding controls');
 
@@ -329,7 +344,7 @@
             });
           })
           .catch(err => {
-            console.error('Erorr loading controls.', err);
+            console.error('Error loading controls.', err);
           });
       });
 

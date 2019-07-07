@@ -1,14 +1,13 @@
 'use strict';
 
 /* eslint-disable no-unused-vars */
-
 const MAZE_URL = 'http://mazemasterjs.com/api/maze';
 // const GAME_URL = 'http://game-server-maze-master-js.b9ad.pro-us-east-1.openshiftapps.com/game';
 const GAME_URL = 'http://mazemasterjs.com/game';
 // const GAME_URL = 'http://localhost:8080/game';
 const TEAM_URL = 'http://mazemasterjs.com/api/team';
-const USER_CREDS = 'a3JlZWJvZzoxc3VwZXIx'; // TODO: Replace myCreds with a login and use btoa(userName + ':' + password) to send the Basic Auth header
 
+// global configuration vars
 const CALLBACK_DELAY = 0;
 const FAIL_IMG_COUNT = 30;
 const SUCC_IMG_COUNT = 31;
@@ -26,6 +25,10 @@ let curGame = {}; // stores the current game data in memory, referenced by send/
 let totalMoves = 0; // track the total move count (accumulated via action/result moveCount )
 let totalScore = 1000; // tracks total score (accumulated via action/result score)
 let BOT_RAM = {}; // used to persist bot-data (memory) while step-running a bot
+
+// user credentials
+const USER_NAME = Cookies.get('userName');
+const USER_CREDS = Cookies.get('userCreds');
 
 /**
  * Returns the number of object keys in BOT_RAM

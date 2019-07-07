@@ -9,7 +9,11 @@
   display: grid;
   grid-template-columns: 6fr 1fr;
   grid-template-rows: 5vh;
-  border: solid 1px red;
+  /* border: solid 1px red; */
+}
+
+#pageHeader .grid-item {
+  border: none;
 }
 
 body {
@@ -236,6 +240,14 @@ pre {
   border: 1px solid #241700;
 }
 
+#imgLogo {
+  display: block;
+  max-width: 230px;
+  max-height: 95px;
+  width: auto;
+  height: auto;
+}
+
 #loadMsgHeader {
   text-shadow: 2px 2px 4px black;
 }
@@ -440,5 +452,5 @@ pre {
 
 .grid-item {
   display: flex;
-  border: solid 1px gray;
+  border: solid 1px #deb8878a;
 }
