@@ -4,20 +4,35 @@ MazeMasterJS Bot Editor
 
 ## TODO:
 
-[X] Need to add some kind of infinite loop detection - longer mazes will run for a very long time...
-[X] Throttle callback responses with a timeout? (now possible in gameFuncs.ts)
-[X] Adjust timeout values on ajax calls
 [ ] Auto-load any open games when player logs in (once we have a log in feature, anyway)
-[X] Auto-load game when re-attaching
+[ ] Create sign-up / team management page
+[ ] Replace janky mini-map with something that looks decent and doesn't suck
+[ ] Login page should automatically redirect USER_ROLES.USER level users to bot-editor
+[ ] Login page should present menu of other options (score board, team/user/bot management) to assistant+ users
+[ ] Add some kind of trophy notification
+[ ] Add some kind of new high score (by maze)
+[ ] Remove cumulative scoring in action log - go back to per-maze score/move counting
+[X] Add login
 [X] Add a quit/abort button
-[ ] Add login / sign-up form of some sort
-[ ] Add support for local credential caching (cookies)
-[ ] Add support for caching maze, team, and bot lists in local storage, too?
-[ ] Finish header work (player greeting, etc)
-[ ] Need to rework engram styling after some action log container changes
-[ ] Re-enable skully / cheese minimap cover at game end before CAMP
+[X] Auto-load game when re-attaching
+[X] Add support for caching maze, team, and bot lists in local storage, too?
+[X] Add support for local credential caching (cookies)
+[X] Finish header work (player greeting, etc)
 
 ## Change Notes
+
+### v0.8.0
+
+- Login page added
+- Credentials cached in local cookie after successful validation
+- Advanced controls (maze, team, bot select) only visible to users with >= assistant role
+- Quit .gifs added to taunt those who /quit an active game
+- Spiffy new logo added!
+- Controls relocated to strategic page positions to maximize available real estate
+- All logMessage() types now render embedded html (e.g. <b>, <i>, <img>)
+- Started replacing full \$.ajax calls with a simplified wrapper - more work to do on this
+- CTRL+S in editor now only saves a new version if there are changes to be saved
+- Tooltips no longer get stuck on the screen in certain situations
 
 ### v0.7.0
 
