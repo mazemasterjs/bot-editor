@@ -178,7 +178,7 @@
           $('#loadMsgHeader').html(`<b>Authentication Failure</b>`);
           $('#loadMsgBody').html(`<span style='color:antiquewhite'>Redirecting you to the log in page in</span>&nbsp;<b>${countdown}</b>...`);
           setInterval(() => {
-            countdown--;
+            if (countdown > 0){            countdown--;}
             $('#loadMsgBody').html(`<span style='color:antiquewhite'>Redirecting you to the log in page in</span>&nbsp;<b>${countdown}</b>...`);
           }, 1000);
           setTimeout(() => {
