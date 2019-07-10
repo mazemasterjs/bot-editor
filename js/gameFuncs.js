@@ -9,7 +9,7 @@ const TEAM_URL = 'http://mazemasterjs.com/api/team';
 
 // global configuration vars
 let botCallBackTimer = -1;
-const CALLBACK_TIMEOUT = 3000;
+const CALLBACK_TIMEOUT = 5000;
 const CALLBACK_DELAY = 0;
 const FAIL_IMG_COUNT = 31;
 const SUCC_IMG_COUNT = 31;
@@ -285,10 +285,15 @@ function loadBotCode(botId, version) {
         $('#selBotVersion').val(botCode.version);
         const date = new Date(botCode.lastUpdated);
 
+        let botName = DATA_BOT.name;
+        if (DATA_USER.role > USER_ROLES.USER && DATA_USER.botId === $('#selBot :selected').val()) {
+          botName = $('#selBot :selected').attr('name');
+        }
+
         logMessage(
           'log',
-          `"${DATA_BOT.name}" v${botCode.version} Loaded.`,
-          `"${DATA_BOT.name}" v${botCode.version} was last saved on ${date.toLocaleDateString()} at ${date.toLocaleTimeString()}.`,
+          `"${botName}" v${botCode.version} Loaded.`,
+          `"${botName}" v${botCode.version} was last saved on ${date.toLocaleDateString()} at ${date.toLocaleTimeString()}.`,
         );
 
         // load the code into the editor
@@ -345,11 +350,16 @@ function updateBotCode(botId, version, code) {
     },
   })
     .then(() => {
-      logMessage('bot', `"${BOT_DATA.name}" v<b>${version}</b>&nbsp;- Updated.`);
+      let botName = DATA_BOT.name;
+      if (DATA_USER.role > USER_ROLES.USER && DATA_USER.botId === $('#selBot :selected').val()) {
+        botName = $('#selBot :selected').attr('name');
+      }
+
+      logMessage('bot', `"${botName}" v<b>${version}</b>&nbsp;- Updated.`);
       setSaveButtonStates(false);
     })
     .catch(error => {
-      logMessage('err', 'ERROR UPDATING BOT CODE', `${error.status} - ${error.statusText}`);
+      logMessage('err', 'ERROR UPDATING BOT CODE', JSON.stringify(error));
     });
   // .done(() => {
   //   loadBotVersions(botId, false);
@@ -503,8 +513,17 @@ function logMessage(source, header, message) {
  */
 async function startGame(autoPlay = false) {
   const mazeId = $('#selMaze').val();
-  const teamId = $('#selTeam').val();
-  const botId = $('#selBot :selected').val();
+  let teamId = DATA_USER.teamId;
+  let botId = DATA_USER.botId;
+
+  if (DATA_USER.role > USER_ROLES.USER && DATA_USER.teamId === $('#selTeam :selected').val()) {
+    teamId = $('#selTeam :selected').val();
+  }
+
+  if (DATA_USER.role > USER_ROLES.USER && DATA_USER.botId === $('#selBot :selected').val()) {
+    botId = $('#selBot :selected').val();
+  }
+
   const NEW_GAME_URL = GAME_URL + '/new/' + mazeId + '/' + teamId + '/' + botId;
 
   return await $.ajax({
@@ -659,7 +678,13 @@ async function startBot(stepBot = true, debugBot = false) {
 
   // save any outstanding changes when run
   if ($('#btnSaveBotCode').hasClass('btnEnabled')) {
-    updateBotCode($('#selBot :selected').val(), $('#selBotVersion :selected').val(), botCode);
+    let botId = DATA_USER.botId;
+
+    // admin botId select override
+    if (DATA_USER.role > USER_ROLES.USER && DATA_USER.botId === $('#selBot :selected').val()) {
+      botId = $('#selBot :selected').val();
+    }
+    updateBotCode(botId, $('#selBotVersion :selected').val(), botCode);
   }
 
   // make sure there's some code to run
@@ -1285,6 +1310,10 @@ async function SendAction(action) {
     const cmdErr = new Error('Missing action.command - Your action must include a command.');
     logMessage('err', 'Missing action.command', cmdErr.message);
     throw cmdErr;
+  }
+
+  if (!action.direction) {
+    action.direction = DIRECTIONS.NONE;
   }
 
   if (!curGame || !curGame.gameId || curGame.gameId.trim() === '') {
