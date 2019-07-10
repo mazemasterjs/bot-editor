@@ -3,11 +3,13 @@
 /* eslint-disable no-unused-vars */
 const MAZE_URL = 'http://mazemasterjs.com/api/maze';
 // const GAME_URL = 'http://game-server-maze-master-js.b9ad.pro-us-east-1.openshiftapps.com/game';
-// const GAME_URL = 'http://mazemasterjs.com/game';
-const GAME_URL = 'http://localhost:8080/game';
+const GAME_URL = 'http://mazemasterjs.com/game';
+// const GAME_URL = 'http://localhost:8080/game';
 const TEAM_URL = 'http://mazemasterjs.com/api/team';
 
 // global configuration vars
+let botCallBackTimer = -1;
+const CALLBACK_TIMEOUT = 3000;
 const CALLBACK_DELAY = 0;
 const FAIL_IMG_COUNT = 31;
 const SUCC_IMG_COUNT = 31;
@@ -60,50 +62,86 @@ const jsonToStr = obj => {
  * Load global game and user data elements
  */
 async function loadData() {
-  const userPromise = doAjax(TEAM_URL + '/get/user?userName=' + USER_NAME);
-
   // load maze stubs
   $('#loadMsgBody').text('... loading game data');
-  doAjax(MAZE_URL + '/get').then(data => {
-    console.log('loadData(): MAZES -> ', data);
 
+  //
+  // LOAD MAZES
+  //
+  console.log('loadData() -> Load maze stubs...');
+  doAjax(MAZE_URL + '/get').then(mazes => {
     let opts = '';
-    for (const maze of data) {
+    for (const maze of mazes) {
       opts = opts + `<option value="${maze.id}">${maze.name}</option>\n`;
     }
+    $('#selMaze').html(opts);
 
-    $('#selMaze').empty();
-    $('#selMaze').append(opts);
-
-    DATA_MAZES = data;
+    DATA_MAZES = mazes;
+    console.log(`loadData(): ${DATA_MAZES.length} maze stubs loaded.`);
   });
 
-  // load user data
-  userPromise.then(data => {
-    console.log('loadData(): USER -> ', data[0]);
-    DATA_USER = data[0];
+  //
+  // LOAD USER-SPECIFIC DATA
+  //
+  console.log('loadData() -> Load User: ' + USER_NAME);
+  doAjax(TEAM_URL + '/get/user?userName=' + USER_NAME)
+    .then(user => {
+      DATA_USER = user[0];
+      console.log('loadData() -> User Loaded.');
+    })
+    .then(() => {
+      console.log('loadData() -> Load Team: ' + DATA_USER.teamId);
+      doAjax(TEAM_URL + '/get?id=' + DATA_USER.teamId)
+        .then(team => {
+          DATA_TEAM = team[0];
+          $('#userTeam').html(DATA_TEAM.name);
+          console.log('loadData() -> Team Loaded.');
+        })
+        .then(() => {
+          console.log('loadData() -> Find Bot: ' + DATA_USER.botId);
+          DATA_BOT = DATA_TEAM.bots.find(bot => {
+            return bot.id === DATA_USER.botId;
+          });
+          $('#userBot').html(DATA_BOT.name);
+          console.log('loadData() -> Bot Found.');
+        })
+        .then(() => {
+          //
+          // LOAD ELEVATED USER DATA (if needed)
+          //
+          if (DATA_USER.role > USER_ROLES.USER) {
+            console.log('loadData() -> All Teams.');
+            doAjax(TEAM_URL + '/get').then(teams => {
+              let opts = '';
+              for (const team of teams) {
+                opts = opts + `<option value="${team.id}"`;
+                if (team.id === DATA_USER.teamId) {
+                  opts = opts + ' selected="selected"';
 
-    // show admin controls for elevated users
-    if (DATA_USER.role > USER_ROLES.USER) {
-      $('#adminControls').css('visibility', 'visible');
-    }
-  });
+                  // load bots for selected team
+                  let botOpts = '';
+                  for (const bot of team.bots) {
+                    botOpts += `<option value="${bot.id}" name="${bot.name}"`;
+                    if (bot.id === DATA_USER.botId) {
+                      botOpts = botOpts + ' selected="selected"';
+                      loadBotVersions(bot.id, true);
+                    }
+                    botOpts = botOpts + `>${bot.name}</option>\n`;
+                  }
+                  $('#selBot').html(botOpts);
+                }
+                opts = opts + `>${team.name}</option>\n`;
+              }
+              $('#selTeam').html(opts);
+            });
 
-  // load user and team bot data
-  userPromise.then(data => {
-    return doAjax(TEAM_URL + '/get?id=' + data[0].teamId).then(teamData => {
-      const team = teamData[0];
-      $('#userTeam').html(team.name);
-      console.log('loadData(): TEAM -> ', team);
-
-      DATA_BOT = team.bots.find(bot => {
-        return bot.id === data[0].botId;
-      });
-      $('#userBot').html(DATA_BOT.name);
-      console.log('loadData(): BOT -> ', DATA_BOT);
-      DATA_TEAM = team;
+            $('#adminControls').css('visibility', 'visible');
+          }
+        })
+        .then(() => {
+          $('#loadingDialog').dialog('close');
+        });
     });
-  });
 }
 
 /**
@@ -112,6 +150,7 @@ async function loadData() {
  * @return {Promise}
  */
 async function loadControls() {
+  return;
   if (DBG) console.log('loadControls -> mazes');
   $('#loadMsgBody').text('... fetching maze data');
 
@@ -145,6 +184,8 @@ function resetGlobals() {
   botCallback = null;
   totalMoves = 0;
   totalScore = 1000;
+  clearInterval(botCallBackTimer);
+  setBotButtonStates(true);
 }
 
 /**
@@ -226,7 +267,7 @@ async function loadBots(teamId) {
  * @return {void}
  */
 function loadBotVersions(botId, autoLoadBot = true) {
-  $('#loadMsgBody').text('... collecting versions of ' + $('#selBot :selected').val());
+  $('#loadMsgBody').text('... collecting versions for bot ' + botId);
 
   const BOT_CODE_URL = TEAM_URL + '/get/botCode?botId=' + botId;
   if (DBG) {
@@ -720,14 +761,14 @@ async function startBot(stepBot = true, debugBot = false) {
   if (!curGame || !lastActionResult || curGame.gameId === undefined) {
     await startGame()
       .then(gameData => {
-        if (DBG) console.log('runBot() -> New game started. gameData.gameId=' + gameData.gameId);
+        if (DBG) console.log('startBot() -> New game started. gameData.gameId=' + gameData.gameId);
       })
       .catch(async ngErr => {
         if (ngErr && ngErr.responseJSON && ngErr.responseJSON.gameId) {
           logMessage('wrn', 'GAME IN PROGRESS - RESUMING', `Let's pick up where you left off. Good luck!`);
           await loadGame(ngErr.responseJSON.gameId)
             .then(gameData => {
-              if (DBG) console.log('runBot() -> Game in progress, resuming game. gameData.gameId=' + gameData.gameId);
+              if (DBG) console.log('startBot() -> Game in progress, resuming game. gameData.gameId=' + gameData.gameId);
             })
             .catch(rgErr => {
               logMessage('err', 'ERROR RESUMING GAME', rgErr.responseText ? rgErr.responseText : 'Check console log for details.');
@@ -799,6 +840,8 @@ async function runBot(botCode, stepBot, debugBot) {
     // convert the bot text to a js function
     if (DBG) console.log(`runBot(${stepBot}, ${debugBot}) : Creating botFn.`);
     const botFn = new Function(botCode);
+    clearInterval(botCallBackTimer);
+    botCallBackTimer = setInterval(callbackTimeout, CALLBACK_TIMEOUT); // safety check for bots that fall out of the function (or get stuck) before sending an action
     botFn();
   } catch (botCodeErr) {
     console.error(`runBot(${stepBot}, ${debugBot}) : Error running bot. botBuildErr -> `, botCodeErr);
@@ -1356,6 +1399,8 @@ async function SendAction(action) {
 
         // Only continue chain if game is still in progress and botCallback is set
         if (botCallback !== null && data.game.score.gameResult === GAME_RESULTS.IN_PROGRESS) {
+          clearInterval(botCallBackTimer);
+          botCallBackTimer = setInterval(callbackTimeout, CALLBACK_TIMEOUT); // safety check for bots that fall out of the function (or get stuck) before sending an action
           botCallback(data);
         } else {
           if (DBG) console.log(method, 'Chain Stopped. gameResult=', data.game.score.gameResult, 'botCallback == null? ' + botCallback === null);
@@ -1374,6 +1419,18 @@ async function SendAction(action) {
         setBotButtonStates(true);
       }
     });
+}
+
+/**
+ * Reset botCallback and enables bot control if goBot() fails to call SendAction within
+ * the timeout value set by CALLBACK_TIMEOUT
+ *
+ */
+function callbackTimeout() {
+  clearInterval(botCallBackTimer);
+  botCallback = null;
+  setBotButtonStates(true);
+  logMessage('wrn', 'BOT TIMEOUT', 'Your bot timed out. It may have forgotten to call SendAction() before it exited or returned.');
 }
 
 /**
