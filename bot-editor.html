@@ -187,9 +187,6 @@
           return;
         } else {
           $('#userName').html(`<b>${Cookies.get('userName')}</b>`);
-          // <div id="userName">Welcome, Coder!</div>
-          // <div id="userTeam">Team:</div>
-          // <div id="userBot">Bot:</div>
         }
 
         $('#loadMsgBody').text('... binding controls');
@@ -353,24 +350,7 @@
           scaleMiniMap();
         });
 
-        // load the controls
-        $('#loadMsgBody').text('... loading control data');
-        await loadControls()
-          .then(() => {
-            pageLoadComplete = true;
-            window.addEventListener('beforeunload', function(e) {
-              // if save button is disabled, do not warn of lost data
-              if ($('#btnSaveBotCode').hasClass('btnEnabled')) {
-                e.preventDefault();
-                e.returnValue = '';
-              }
-            });
-          })
-          .catch(err => {
-            console.error('Error loading controls.', err);
-          });
-
-        await loadData();
+        loadData();
         pageResize();
 
         $('#botControls').css('visibility', 'visible');
@@ -399,6 +379,8 @@
           at: 'right top',
           of: '#editor',
         });
+        pageLoadComplete = true;
+        setSaveButtonStates(true);
       }
 
       // keep textLog always scrolled to the bottom

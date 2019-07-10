@@ -102,8 +102,11 @@ async function loadData() {
           DATA_BOT = DATA_TEAM.bots.find(bot => {
             return bot.id === DATA_USER.botId;
           });
+
           $('#userBot').html(DATA_BOT.name);
-          console.log('loadData() -> Bot Found.');
+          console.log('loadData() -> Bot Found.', DATA_BOT);
+
+          loadBotVersions(DATA_USER.botId, true);
         })
         .then(() => {
           //
@@ -140,32 +143,9 @@ async function loadData() {
         })
         .then(() => {
           $('#loadingDialog').dialog('close');
+          setBotButtonStates(true);
         });
     });
-}
-
-/**
- * Promise chain for control loading based on
- * order of load requirements
- * @return {Promise}
- */
-async function loadControls() {
-  return;
-  if (DBG) console.log('loadControls -> mazes');
-  $('#loadMsgBody').text('... fetching maze data');
-
-  return doAjax(`${MAZE_URL}/get`).then(() => {
-    if (DBG) console.log(' loadControls -> teams');
-    $('#loadMsgBody').text('... fetching team data');
-    return loadTeams().then(() => {
-      if (DBG) console.log('  loadControls -> bots');
-      $('#loadMsgBody').text('... loading bots for team ' + $('#selTeam :selected').val());
-      return loadBots($('#selTeam :selected').val()).then(() => {
-        console.log('loadControls -> Promise chain complete.');
-        logMessage('log', 'READY TO&nbsp;<b>ROCK!</b>', 'The bot editor is ready.');
-      });
-    });
-  });
 }
 
 /**
@@ -197,70 +177,6 @@ function loadMazes() {
 }
 
 /**
- * Loads team values into controls
- *
- * @return {Promise}
- */
-function loadTeams() {
-  const TEAM_GET_URL = `${TEAM_URL}/get`;
-  if (DBG) {
-    console.log('  -> loadTeams -> ', TEAM_GET_URL);
-  }
-  return $.ajax({
-    url: TEAM_GET_URL,
-    dataType: 'json',
-    method: 'GET',
-    headers: { Authorization: 'Basic ' + USER_CREDS },
-  })
-    .then(teams => {
-      $('#selTeam').empty();
-      for (const team of teams) {
-        let opt = "<option value='" + team.id + "'>";
-        opt += team.name;
-        opt += '</option>';
-        $('#selTeam').append(opt);
-      }
-      return Promise.resolve();
-    })
-    .catch(error => {
-      logMessage('err', 'ERROR LOADING TEAMS', err.status !== 0 ? `${error.status} - ${error.statusText}` : undefined);
-    });
-}
-
-/**
- * Loads bot values into controls for given team
- * @param {*} teamId
- */
-async function loadBots(teamId) {
-  const BOT_GET_URL = `${TEAM_URL}/get?id=${teamId}`;
-  if (DBG) {
-    console.log('   -> loadBots -> ', teamId, BOT_GET_URL);
-  }
-  if (!teamId) return;
-
-  return $.ajax({
-    url: BOT_GET_URL,
-    dataType: 'json',
-    method: 'GET',
-    headers: { Authorization: 'Basic ' + USER_CREDS },
-  })
-    .then(data => {
-      const team = data[0];
-      $('#selBot').empty();
-      for (const bot of team.bots) {
-        const botSel = `<option value='${bot.id}' name='${bot.name}'>${bot.name} (${bot.coder})</option>`;
-        $('#selBot').append(botSel);
-      }
-    })
-    .catch(error => {
-      logMessage('err', 'ERROR LOADING BOTS', err.status !== 0 ? `${error.status} - ${error.statusText}` : undefined);
-    })
-    .done(() => {
-      loadBotVersions($('#selBot :selected').val());
-    });
-}
-
-/**
  * Populates the version select control with all versions available for the given bot
  * @param {*} botId
  * @param {*} autoLoadBot
@@ -271,7 +187,7 @@ function loadBotVersions(botId, autoLoadBot = true) {
 
   const BOT_CODE_URL = TEAM_URL + '/get/botCode?botId=' + botId;
   if (DBG) {
-    console.log('    -> loadBotVersions ->', botId);
+    console.log('loadBotVersions() -> ', botId, autoLoadBot);
   }
 
   return $.ajax({
@@ -281,19 +197,15 @@ function loadBotVersions(botId, autoLoadBot = true) {
     headers: { Authorization: 'Basic ' + USER_CREDS },
   })
     .then(docs => {
-      $('#selBotVersion').empty();
-      let versionCount = 0;
+      let opts = [];
       for (const doc of docs.reverse()) {
-        versionCount++;
-        if (versionCount > 25) {
-          deleteBotCodeVersion(botId, doc.version);
-        } else {
-          $('#selBotVersion').append(`<option value="${doc.version}">${doc.version}</option>`);
-        }
+        opts.push(`<option value="${doc.version}">${doc.version}</option>\n`);
       }
+      $('#selBotVersion').html(opts.join());
     })
     .catch(lbvError => {
       if (lbvError.status === 404) {
+        console.log('loadBotVersions() -> No versions found, auto-generating v0.0.1.');
         versionBotCode(botId, editor.getValue());
       } else {
         logMessage('err', `ERROR LOADING BOT CODE &rsaquo; ${lbvError.status} (${lbvError.statusText})`, `Cannot load code for bot&nbsp;<b>${botId}</b>.`);
@@ -301,7 +213,7 @@ function loadBotVersions(botId, autoLoadBot = true) {
     })
     .done(() => {
       if (autoLoadBot) {
-        loadBotCode($('#selBot :selected').val());
+        loadBotCode(botId);
       }
     });
 }
@@ -375,8 +287,8 @@ function loadBotCode(botId, version) {
 
         logMessage(
           'log',
-          `"${$('#selBot :selected').attr('name')}" v${botCode.version} Loaded.`,
-          `"${$('#selBot :selected').attr('name')}" v${botCode.version} was last saved on ${date.toLocaleDateString()} at ${date.toLocaleTimeString()}.`,
+          `"${DATA_BOT.name}" v${botCode.version} Loaded.`,
+          `"${DATA_BOT.name}" v${botCode.version} was last saved on ${date.toLocaleDateString()} at ${date.toLocaleTimeString()}.`,
         );
 
         // load the code into the editor
@@ -433,15 +345,15 @@ function updateBotCode(botId, version, code) {
     },
   })
     .then(() => {
-      logMessage('bot', `"${$('#selBot :selected').attr('name')}" v<b>${version}</b>&nbsp;- Updated.`);
+      logMessage('bot', `"${BOT_DATA.name}" v<b>${version}</b>&nbsp;- Updated.`);
       setSaveButtonStates(false);
     })
     .catch(error => {
       logMessage('err', 'ERROR UPDATING BOT CODE', `${error.status} - ${error.statusText}`);
-    })
-    .done(() => {
-      loadBotVersions(botId, false);
     });
+  // .done(() => {
+  //   loadBotVersions(botId, false);
+  // });
 }
 
 /**
