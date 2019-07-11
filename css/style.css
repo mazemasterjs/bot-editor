@@ -195,6 +195,7 @@ a:hover {
 #miniMap {
   visibility: hidden;
   position: absolute;
+  top: 0;
   z-index: 10;
   min-height: var(--miniMapBaseSize);
   min-width: var(--miniMapBaseSize);
@@ -363,7 +364,6 @@ a:hover {
 
 .engramData {
   display: none;
-  /* visibility: hidden; */
   line-height: 1.25rem;
   margin: 0;
   overflow-x: auto;
@@ -577,6 +577,8 @@ a:hover {
 
 #botControls {
   visibility: hidden;
+  position: absolute;
+  top: 0;
   width: fit-content;
 }
 
@@ -590,10 +592,11 @@ a:hover {
 }
 
 #adminSelects {
+  position: absolute;
+  visibility: hidden;
   top: 0;
   color: darkorange;
   font-weight: bold;
-  position: absolute;
   background: rgba(0, 0, 0, 0.75);
   border: solid 1px darkorange;
   border-radius: 0.25rem;
