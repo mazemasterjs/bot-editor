@@ -93,7 +93,7 @@
 
     <section id="hidden-dialogs">
       <div id="adminSelects">
-        <div>-~= ADMIN CONTROLS =~-</div>
+        <div>ADMIN CONTROLS</div>
         <select name="selTeam" id="selTeam" class="adminControl"></select>
         <select name="selBot" id="selBot" class="adminControl"></select>
       </div>
@@ -417,9 +417,9 @@
 
         $('#adminSelects').position({
           my: 'center bottom',
-          at: 'center top',
-          of: '#editor',
-          collision: 'fit none',
+          at: 'center top-10',
+          of: '#textLog',
+          collision: 'fitflip',
         });
 
         pageLoadComplete = true;
