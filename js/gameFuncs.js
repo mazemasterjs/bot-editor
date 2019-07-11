@@ -3,20 +3,20 @@
 /* eslint-disable no-unused-vars */
 const MAZE_URL = 'http://mazemasterjs.com/api/maze';
 // const GAME_URL = 'http://game-server-maze-master-js.b9ad.pro-us-east-1.openshiftapps.com/game';
-const GAME_URL = 'http://mazemasterjs.com/game';
-// const GAME_URL = 'http://localhost:8080/game';
+// const GAME_URL = 'http://mazemasterjs.com/game';
+const GAME_URL = 'http://localhost:8080/game';
 const TEAM_URL = 'http://mazemasterjs.com/api/team';
 
 // global configuration vars
 let botCallBackTimer = -1;
-const CALLBACK_TIMEOUT = 5000;
+const CALLBACK_TIMEOUT = 3000;
 const CALLBACK_DELAY = 0;
 const FAIL_IMG_COUNT = 31;
 const SUCC_IMG_COUNT = 31;
 const QUIT_IMG_COUNT = 12;
 const AJAX_TIMEOUT = 5000;
 const TEXTLOG_MAX_CHILDREN = 250;
-const DBG = false;
+const DBG = true;
 
 // eslint-disable-next-line prefer-const
 let EMERGENCY_STOP_BUTTON_PUSHED = false; // set to true from index.html on STOP button press
@@ -68,7 +68,7 @@ async function loadData() {
   //
   // LOAD MAZES
   //
-  console.log('loadData() -> Load maze stubs...');
+  if (DBG) console.log('loadData() -> Load maze stubs...');
   doAjax(MAZE_URL + '/get').then(mazes => {
     let opts = '';
     for (const maze of mazes) {
@@ -77,34 +77,34 @@ async function loadData() {
     $('#selMaze').html(opts);
 
     DATA_MAZES = mazes;
-    console.log(`loadData(): ${DATA_MAZES.length} maze stubs loaded.`);
+    if (DBG) console.log(`loadData(): ${DATA_MAZES.length} maze stubs loaded.`);
   });
 
   //
   // LOAD USER-SPECIFIC DATA
   //
-  console.log('loadData() -> Load User: ' + USER_NAME);
+  if (DBG) console.log('loadData() -> Load User: ' + USER_NAME);
   doAjax(TEAM_URL + '/get/user?userName=' + USER_NAME)
     .then(user => {
       DATA_USER = user[0];
-      console.log('loadData() -> User Loaded.');
+      if (DBG) console.log('loadData() -> User Loaded.');
     })
     .then(() => {
-      console.log('loadData() -> Load Team: ' + DATA_USER.teamId);
+      if (DBG) console.log('loadData() -> Load Team: ' + DATA_USER.teamId);
       doAjax(TEAM_URL + '/get?id=' + DATA_USER.teamId)
         .then(team => {
           DATA_TEAM = team[0];
           $('#userTeam').html(DATA_TEAM.name);
-          console.log('loadData() -> Team Loaded.');
+          if (DBG) console.log('loadData() -> Team Loaded.');
         })
         .then(() => {
-          console.log('loadData() -> Find Bot: ' + DATA_USER.botId);
+          if (DBG) console.log('loadData() -> Find Bot: ' + DATA_USER.botId);
           DATA_BOT = DATA_TEAM.bots.find(bot => {
             return bot.id === DATA_USER.botId;
           });
 
           $('#userBot').html(DATA_BOT.name);
-          console.log('loadData() -> Bot Found.', DATA_BOT);
+          if (DBG) console.log('loadData() -> Bot Found.', DATA_BOT);
 
           loadBotVersions(DATA_USER.botId, true);
         })
@@ -113,7 +113,7 @@ async function loadData() {
           // LOAD ELEVATED USER DATA (if needed)
           //
           if (DATA_USER.role > USER_ROLES.USER) {
-            console.log('loadData() -> All Teams.');
+            if (DBG) console.log('loadData() -> All Teams.');
             doAjax(TEAM_URL + '/get').then(teams => {
               let opts = '';
               for (const team of teams) {
@@ -127,7 +127,7 @@ async function loadData() {
                     botOpts += `<option value="${bot.id}" name="${bot.name}"`;
                     if (bot.id === DATA_USER.botId) {
                       botOpts = botOpts + ' selected="selected"';
-                      loadBotVersions(bot.id, true);
+                      loadBotVersions(bot.id, false);
                     }
                     botOpts = botOpts + `>${bot.name}</option>\n`;
                   }
@@ -138,13 +138,47 @@ async function loadData() {
               $('#selTeam').html(opts);
             });
 
-            $('#adminControls').css('visibility', 'visible');
+            // $('.adminControl').css('visibility', 'visible');
+            $('#adminSelects').css('visibility', 'visible');
           }
         })
         .then(() => {
           $('#loadingDialog').dialog('close');
           setBotButtonStates(true);
         });
+    });
+}
+
+/**
+ * Loads bot values into controls for given team
+ * @param {*} teamId
+ */
+async function loadBots(teamId) {
+  const BOT_GET_URL = `${TEAM_URL}/get?id=${teamId}`;
+  if (DBG) console.log('loadBots() -> ', teamId, BOT_GET_URL);
+
+  if (!teamId) return;
+
+  return $.ajax({
+    url: BOT_GET_URL,
+    dataType: 'json',
+    method: 'GET',
+    headers: { Authorization: 'Basic ' + USER_CREDS },
+  })
+    .then(data => {
+      const team = data[0];
+      const botSel = [];
+      for (const bot of team.bots) {
+        botSel.push(`<option value='${bot.id}'>${bot.name}</option>`);
+      }
+      $('#selBot').html(botSel.join());
+      $('#selBot').change();
+    })
+    .catch(error => {
+      logMessage('err', 'ERROR LOADING BOTS', error.status !== 0 ? `${error.status} - ${error.statusText}` : undefined);
+    })
+    .done(() => {
+      loadBotVersions($('#selBot :selected').val());
     });
 }
 
@@ -186,9 +220,7 @@ function loadBotVersions(botId, autoLoadBot = true) {
   $('#loadMsgBody').text('... collecting versions for bot ' + botId);
 
   const BOT_CODE_URL = TEAM_URL + '/get/botCode?botId=' + botId;
-  if (DBG) {
-    console.log('loadBotVersions() -> ', botId, autoLoadBot);
-  }
+  if (DBG) console.log('loadBotVersions() -> ', botId, autoLoadBot);
 
   return $.ajax({
     url: BOT_CODE_URL,
@@ -197,7 +229,7 @@ function loadBotVersions(botId, autoLoadBot = true) {
     headers: { Authorization: 'Basic ' + USER_CREDS },
   })
     .then(docs => {
-      let opts = [];
+      const opts = [];
       for (const doc of docs.reverse()) {
         opts.push(`<option value="${doc.version}">${doc.version}</option>\n`);
       }
@@ -205,7 +237,7 @@ function loadBotVersions(botId, autoLoadBot = true) {
     })
     .catch(lbvError => {
       if (lbvError.status === 404) {
-        console.log('loadBotVersions() -> No versions found, auto-generating v0.0.1.');
+        if (DBG) console.log('loadBotVersions() -> No versions found, auto-generating v0.0.1.');
         versionBotCode(botId, editor.getValue());
       } else {
         logMessage('err', `ERROR LOADING BOT CODE &rsaquo; ${lbvError.status} (${lbvError.statusText})`, `Cannot load code for bot&nbsp;<b>${botId}</b>.`);
@@ -258,7 +290,7 @@ function loadBotCode(botId, version) {
     BOT_CODE_URL += `&version=${version}`;
   }
 
-  if (DBG) console.log('loadBotCode', botId, version, BOT_CODE_URL);
+  console.log('loadBotCode', botId, version, BOT_CODE_URL);
 
   return $.ajax({
     url: BOT_CODE_URL,
@@ -286,8 +318,8 @@ function loadBotCode(botId, version) {
         const date = new Date(botCode.lastUpdated);
 
         let botName = DATA_BOT.name;
-        if (DATA_USER.role > USER_ROLES.USER && DATA_USER.botId === $('#selBot :selected').val()) {
-          botName = $('#selBot :selected').attr('name');
+        if (DATA_USER.role > USER_ROLES.USER && DATA_USER.botId !== $('#selBot :selected').text()) {
+          botName = $('#selBot :selected').text();
         }
 
         logMessage(
@@ -428,7 +460,12 @@ function versionBotCode(botId, code) {
         },
       })
         .then(() => {
-          logMessage('bot', `"${$('#selBot :selected').attr('name')}" v<b>${newVersion}</b>&nbsp;- New Version Saved.`);
+          let botName = DATA_BOT.name;
+          if (DATA_USER.role > USER_ROLES.USER && DATA_USER.botId === $('#selBot :selected').val()) {
+            botName = $('#selBot :selected').attr('name');
+          }
+
+          logMessage('bot', `"${botName}" v<b>${newVersion}</b>&nbsp;- New Version Saved.`);
           setSaveButtonStates(false);
         })
         .catch(error => {
@@ -440,7 +477,7 @@ function versionBotCode(botId, code) {
           loadBotVersions(botId, false);
         });
     })
-    .catch(error => {
+    .catch(() => {
       $.ajax({
         url: PUT_BOT_CODE_URL,
         dataType: 'json',
@@ -1231,6 +1268,9 @@ function faceAvatar(textMap, dir) {
  */
 function setBotButtonStates(enabled) {
   if (!pageLoadComplete) return;
+
+  // cancel the bot timer
+  clearInterval(botCallBackTimer);
 
   if (enabled) {
     $('.btnBot').attr('disabled', false);
