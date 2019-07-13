@@ -21,6 +21,29 @@ MazeMasterJS Bot Editor
 
 ## Change Notes
 
+### v0.9.0
+
+- Intellisense declarations added for logMessage - includes new enum for LOG_TYPES (BOT, WARN, and ERROR)
+
+  - logMessage(LOG_TYPE:LOG_TYPES, msgHeader:string, msgBody?: string): void;');
+
+- **GameData Object** - goBot(data)'s data paramater has been mapped to a goBot() AND editor scopped object called "GameData".
+
+  - GameData and data contain the same information, but GameData hase intellisense and type-ahead enabled to make finding the right elements much easier for the kids
+  - GameData should be used in snippets and sample bots going forward
+
+- data (and GameData) structure returned to goBot(data)'s data parameter has changed:
+  - data.player.facing - DIRECTIONS.DIRECTION: Direction the player is facing
+  - data.player.state - PLAYER_STATES.PLAYER_STATE: Current player state (bitwise)
+  - data.player.health - number: Current player's remaining health (100 max)
+  - data.room.exitNorth[South | East | West] - boolean - true if exit exists in that direction
+  - data.room.messages[] - Array<string> - Player-written messages in the room (via WRITE command)
+  - data.see.north[south|east|west] - Array<{sight:<string>, distance<number>> - Array of sights in the specified direction
+  - data.hear.north[south|east|west] - Array<{sound:<string>, volume<number>> - Array of sounds in the specified direction
+  - data.smell.north[south|east|west] - Array<{smell:<string>, strength<number>> - Array of smells in the specified direction
+  - data.feel.north[south|east|west] - Array<{feeling:<string>, intensity<number>> - Array of feelings (touch) in the specified direction
+  - data.taste.north[south|east|west] - Array<{taste:<string>, strength<number>> - Array of tastes in the specified direction (rarely used)
+
 ### v0.8.0
 
 - Login page added

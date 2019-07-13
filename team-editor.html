@@ -7,6 +7,7 @@
     <script src="js/js.cookie.min.js"></script>
     <script src="js/jquery-3.4.1.min.js"></script>
     <script src="js/enums.js"></script>
+    <link href="css/team-editor.css" rel="stylesheet" type="text/css" />
     <script>
       const USER_NAME = Cookies.get('userName');
       const USER_CREDS = Cookies.get('userCreds');
@@ -18,14 +19,18 @@
        * Load all existing teams
        */
       function loadTeams() {
-        doAjax(TEAM_URL + '/get').then(data => {
-          const opts = [];
-          data.forEach(team => {
-            ALL_TEAMS.push(team);
-            opts.push(`<option value='${team.id}'>${team.name}</option>`);
+        doAjax(TEAM_URL + '/get')
+          .then(data => {
+            const opts = [];
+            data.forEach(team => {
+              ALL_TEAMS.push(team);
+              opts.push(`<option value='${team.id}'>${team.name}</option>`);
+            });
+            $('#selTeams').html(opts.join());
+          })
+          .then(() => {
+            $('#selTeams').change();
           });
-          $('#selTeams').html(opts.join());
-        });
       }
 
       /**
@@ -78,34 +83,47 @@
     <title>MazeMasterJS - Code Camp 2019</title>
   </head>
   <body>
-    <div id="teams">
-      <label for="selTeams">Team: </label>
-      <select id="selTeams"></select>
-      <button id="btnDelTeam">Delete Team</button>
-      <button id="btnNewTeam">Create Team</button>
-      <button id="btnNewBot">Add Bot</button>
+    <div id="pageContainer">
+      <div id="controls">
+        <h1>Team Editor</h1>
+        <select id="selTeams"></select>
+        <button id="btnNewTeam">New Team</button>
+        <button id="btnNewBot">Add Bot</button>
+        <button id="btnDelTeam">Delete Team</button>
+      </div>
+      <div id="editTeam">
+        <div id="teamId"></div>
+        <div>Team Name:</div>
+        <div><input type="text" id="teamName" /></div>
+        <div>Team Logo:</div>
+        <div><input type="text" id="teamLogo" /></div>
+      </div>
+      <!-- <div id="users">
+        <label for="selUsers">User: </label>
+        <select id="selUsers"></select>
+        <button id="btnDelTeam">Delete User</button>
+        <button id="btnNewUser">Create User</button>
+      </div>
+      <br />
+      <div id="user"></div> -->
     </div>
-    <br />
-    <div id="users">
-      <label for="selUsers">User: </label>
-      <select id="selUsers"></select>
-      <button id="btnDelTeam">Delete User</button>
-      <button id="btnNewUser">Create User</button>
-    </div>
-    <br />
-    <div id="user"></div>
   </body>
 
   <script>
     $().ready(async () => {
       loadTeams();
-      loadUsers();
 
       $('#selTeams').change(() => {
         const selTeam = ALL_TEAMS.find(team => {
           return team.id === $('#selTeams').val();
         });
         console.log('Team Selected -> ', selTeam);
+        $('#teamId').html(selTeam.id);
+        $('#teamName').val(selTeam.name);
+        $('#teamLogo').val(selTeam.logo);
+
+        array.forEach(element => {});
+        for (let x = 0; x < selTeam.bots; x++) {}
       });
 
       $('#selUsers').change(() => {
